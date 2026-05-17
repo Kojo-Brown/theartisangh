@@ -1,8 +1,6 @@
 import { RenderMode, ServerRoute } from '@angular/ssr';
 
 export const serverRoutes: ServerRoute[] = [
-  {
-    path: '**',
-    renderMode: RenderMode.Prerender,
-  },
+  // Client-render everything for now — most routes need auth/runtime data.
+  { path: '**', renderMode: RenderMode.Client },
 ];

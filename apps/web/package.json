@@ -1,0 +1,13 @@
+{
+  "name": "@artisangh/web",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "name": "web"
+  },
+  "dependencies": {
+    "@artisangh/shared-i18n": "workspace:*",
+    "@artisangh/shared-types": "workspace:*",
+    "@artisangh/web-api-client": "workspace:*"
+  }
+}

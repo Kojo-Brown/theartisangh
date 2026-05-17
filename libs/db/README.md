@@ -42,4 +42,5 @@ In NestJS, prefer the `PrismaService` singleton from `@artisangh/api-core` (adde
 
 ## Milestone status
 
-- M1 done — schema + client wired. No migrations yet (deferred to M2 when the auth flow needs the `User` table).
+- M1 done — schema + client wired.
+- M2 done — first migration `20260517123229_init` applied. Creates all 11 models plus the PostGIS extension family (`postgis`, `postgis_topology`, `postgis_tiger_geocoder`, `fuzzystrmatch`, `pgcrypto`, `uuid-ossp`).

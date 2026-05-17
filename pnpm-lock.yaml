@@ -386,6 +386,18 @@ importers:
 
   apps/api-e2e: {}
 
+  apps/web:
+    dependencies:
+      '@artisangh/shared-i18n':
+        specifier: workspace:*
+        version: link:../../libs/shared/i18n
+      '@artisangh/shared-types':
+        specifier: workspace:*
+        version: link:../../libs/shared/types
+      '@artisangh/web-api-client':
+        specifier: workspace:*
+        version: link:../../libs/web/api-client
+
   apps/web-e2e: {}
 
   apps/worker:
@@ -481,6 +493,9 @@ importers:
 
   libs/web/api-client:
     dependencies:
+      '@artisangh/shared-types':
+        specifier: workspace:*
+        version: link:../../shared/types
       tslib:
         specifier: ^2.3.0
         version: 2.8.1

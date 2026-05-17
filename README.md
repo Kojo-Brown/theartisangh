@@ -194,7 +194,7 @@ See [`.env.example`](./.env.example) for the full set. Highlights:
 
 Each milestone updates this section and the relevant per-app/per-lib READMEs. Boxes are checked only when the verification steps in that milestone pass.
 
-### ✅ Milestone 1 — Foundation (current)
+### ✅ Milestone 1 — Foundation
 
 Goal: every subsequent milestone can start without touching scaffolding.
 
@@ -208,16 +208,23 @@ Goal: every subsequent milestone can start without touching scaffolding.
 - [x] Prettier + ESLint (per-project flat config from Nx generators) + import-boundary plugin
 - [x] Root README + per-app/per-lib READMEs
 
-### ⏳ Milestone 2 — Auth + profiles
+### ✅ Milestone 2 — Auth + profiles (current)
 
-- [ ] `auth` module: phone + SMS OTP via Hubtel, rate-limited, OTPs in Redis
-- [ ] JWT access (15 min) + rotating refresh token in httpOnly cookie
-- [ ] Customer + artisan onboarding flows in `apps/web`
-- [ ] Profile read endpoints + basic search (`/artisans` by trade, by lat/lng radius using PostGIS `ST_DWithin`)
-- [ ] GitHub Actions CI workflow (lint + typecheck + test on every PR)
-- [ ] OpenAPI document published; `web/api-client` regenerated
+- [x] `auth` module: phone + SMS OTP, rate-limited, OTPs hashed in Redis. Dev `console` SMS provider logs OTPs to the worker terminal; Hubtel adapter wired and activates when `SMS_PROVIDER=hubtel` + creds are set.
+- [x] JWT access (15 min) + rotating refresh token (30 d) in httpOnly cookie; replay-protected via Redis allowlist.
+- [x] `users` module (`GET/PATCH /users/me`) + `artisans` module with profile upsert (`PUT /artisans/me`) and PostGIS `ST_DWithin` radius search (`GET /artisans?lat=&lng=&radiusKm=&trade=`).
+- [x] Worker app: BullMQ with `sms.send` consumer that delegates to the shared SMS provider interface.
+- [x] Web (`apps/web`): signal-store auth, phone+OTP login screen, role pick, artisan onboarding form (trades, hourly rate, radius, geolocation), customer-side search UI with "near me", artisan detail page. Locale picker in the shell (en/tw/ga/ee) backed by `@artisangh/shared-i18n`.
+- [x] OpenAPI exposed at `/api/docs` (`/api/openapi.json`). For M2 we ship a hand-rolled typed `ApiClient` in `@artisangh/web-api-client` rather than wiring the OpenAPI generator (it requires Java/Docker) — codegen can replace it later without surface changes.
+- [x] GitHub Actions CI: `lint + typecheck + test + build` via `nx affected`, with Postgres + PostGIS + Redis service containers, Prisma migrations applied in-CI.
 
-### ⏳ Milestone 3 — Verification (trust layer)
+**Decisions worth knowing:**
+
+- DB host port is `55432` (not `5432`) to coexist with Homebrew Postgres on dev machines.
+- Prisma owns the PostGIS extension family (`postgis`, `postgis_topology`, `postgis_tiger_geocoder`, `fuzzystrmatch`, `pgcrypto`, `uuid-ossp`). The init SQL script was removed — `prisma migrate dev` installs everything.
+- The Angular apps need `lib: ["es2022", "dom"]` and the project-references flags (`composite`, `declaration`, `declarationMap`, `emitDeclarationOnly`) explicitly unset; baked into `apps/{web,admin}/tsconfig.json`.
+
+### ⏳ Milestone 3 — Verification (trust layer) ← **NEXT**
 
 - [ ] Ghana Card + selfie upload via R2 signed URLs
 - [ ] Worker pipeline: AWS Rekognition face-match + Textract OCR + KMS column encryption

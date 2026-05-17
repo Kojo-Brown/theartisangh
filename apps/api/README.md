@@ -33,4 +33,20 @@ src/
 
 ## Milestone status
 
-- M1 ✅ scaffolded as a default Nest app. Modules above are populated in M2 onward.
+- M1 ✅ scaffolded as a default Nest app.
+- M2 ✅ `auth`, `users`, `artisans` modules live. Helmet + CORS + cookie-parser + global Zod validation + throttler. OpenAPI exposed at `/api/docs` and `/api/openapi.json`.
+
+## Endpoints (M2)
+
+| Method | Path                    | Auth   | Notes                                                                              |
+| ------ | ----------------------- | ------ | ---------------------------------------------------------------------------------- |
+| POST   | `/api/auth/otp/request` | Public | Body: `{ phone }`. 204 on success — never reveals whether the user exists.         |
+| POST   | `/api/auth/otp/verify`  | Public | Body: `{ phone, code, fullName?, role? }`. Sets `refresh_token` cookie.            |
+| POST   | `/api/auth/refresh`     | Cookie | Rotates the refresh token.                                                         |
+| POST   | `/api/auth/logout`      | Bearer | Revokes all refresh tokens for the user.                                           |
+| GET    | `/api/users/me`         | Bearer | Current user incl. artisan profile + verification.                                 |
+| PATCH  | `/api/users/me`         | Bearer | Update name/email/locale/avatar.                                                   |
+| GET    | `/api/artisans`         | Public | Query: `lat, lng, radiusKm?, trade?, limit?, verifiedOnly?`. PostGIS `ST_DWithin`. |
+| GET    | `/api/artisans/:id`     | Public | Artisan detail.                                                                    |
+| PUT    | `/api/artisans/me`      | Bearer | Upsert caller's artisan profile (also promotes role to `ARTISAN`).                 |
+| GET    | `/api/artisans/me`      | Bearer | Caller's artisan profile.                                                          |

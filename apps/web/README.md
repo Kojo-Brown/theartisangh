@@ -32,4 +32,22 @@ pnpm dev:web   # http://localhost:4200
 
 ## Milestone status
 
-- M1 ✅ scaffolded with Tailwind, SSR, Vitest, Playwright. No business code yet.
+- M1 ✅ scaffolded with Tailwind, SSR, Vitest, Playwright.
+- M2 ✅ end-to-end auth flow + onboarding + search.
+
+## Routes (M2)
+
+| Path                  | Component                      | Auth     |
+| --------------------- | ------------------------------ | -------- |
+| `/`                   | `HomeComponent`                | Public   |
+| `/auth/login`         | `LoginComponent` (phone → OTP) | Public   |
+| `/onboarding`         | `RolePickComponent`            | Required |
+| `/onboarding/artisan` | `ArtisanOnboardingComponent`   | Required |
+| `/dashboard`          | `DashboardComponent`           | Required |
+| `/search`             | `SearchComponent` (PostGIS)    | Public   |
+| `/artisans/:id`       | `ArtisanDetailComponent`       | Public   |
+
+## State + i18n
+
+- `AuthStore` (signals, `providedIn: 'root'`) holds the access token + cached user; refresh-token rotation is transparent via `ApiClient.onUnauthorized`.
+- `I18nService` exposes a `t()` lookup over the `@artisangh/shared-i18n` catalogs; the locale picker in the shell writes to localStorage (browser-only).

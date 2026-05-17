@@ -27,4 +27,5 @@ pnpm dev:worker
 
 ## Milestone status
 
-- M1 ✅ scaffolded as a default Nest app. Queues added in subsequent milestones.
+- M1 ✅ scaffolded as a default Nest app.
+- M2 ✅ BullMQ wired; `sms.send` consumer active and delegates to the shared `SMS_PROVIDER` injection token from `@artisangh/api-core` (Console stub in dev, Hubtel adapter when `SMS_PROVIDER=hubtel`).
