@@ -1,106 +1,273 @@
-# New Nx Repository
+# The Artisan GH
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+> A marketplace connecting Ghanaian customers with trusted artisans, electricians, plumbers, masons, carpenters and skilled or unskilled workers.
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
+This repository is an **Nx monorepo** containing the entire stack — Angular web apps, NestJS services, shared TypeScript libraries, infrastructure-as-code, and the Prisma data layer.
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/nx-api/js?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
-## Finish your Nx platform setup
+---
 
-🚀 [Finish setting up your workspace](https://cloud.nx.app/connect/LKjciO2xyL) to get faster builds with remote caching, distributed task execution, and self-healing CI. [Learn more about Nx Cloud](https://nx.dev/ci/intro/why-nx-cloud).
-## Generate a library
+## 📑 Table of contents
 
-```sh
-npx nx g @nx/js:lib packages/pkg1 --publishable --importPath=@my-org/pkg1
+1. [Project goals & differentiators](#-project-goals--differentiators)
+2. [Architecture](#-architecture)
+3. [Tech stack](#-tech-stack)
+4. [Repo layout](#-repo-layout)
+5. [Getting started (local dev)](#-getting-started-local-dev)
+6. [Environment variables](#-environment-variables)
+7. [Milestone roadmap & progress](#-milestone-roadmap--progress)
+8. [Convention: maintaining this README](#-convention-maintaining-this-readme)
+
+---
+
+## 🎯 Project goals & differentiators
+
+The Ghanaian artisan market is large, mobile-first, and dominated by trust, language and payment friction. The Artisan GH targets all three with **four flagship v1 features**:
+
+| #   | Feature                                                                                                                     | Problem it solves                                                                   |
+| --- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| 1   | **Verified artisan badges** — Ghana Card + selfie + (optional) trade certification, reviewed by AI + human admin queue      | Customers can't tell who is real or skilled — verification breaks the trust barrier |
+| 2   | **Voice-note job requests with Twi / Ga / Ewe support** — record audio, transcribed by Whisper, UI fully localised          | Many artisans are not literate in English; voice opens the platform to them         |
+| 3   | **Live location + ETA tracking** — Uber/Bolt-style map view from booking acceptance through arrival                         | Removes the "is the plumber even coming?" anxiety that kills bookings               |
+| 4   | **Escrow + milestone payments** — funds held by the platform until milestones are signed off, with disputes routed to admin | Removes the "do I pay before or after?" deadlock for any job over GHS 100           |
+
+Target user surfaces (v1): **responsive web only** (mobile-first PWA). Native mobile is post-v1.
+
+---
+
+## 🏗 Architecture
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│                  Cloudflare (CDN + WAF + R2)                   │
+└────────────────────────────────────────────────────────────────┘
+                              │
+        ┌─────────────────────┼─────────────────────┐
+        ▼                                           ▼
+┌──────────────────┐                      ┌───────────────────┐
+│  apps/web        │  ◄── WebSocket ──►   │  apps/api         │
+│  Angular 21 PWA  │  ◄──── REST ─────►   │  NestJS 11        │
+│  (mobile-first)  │                      │  modular monolith │
+└──────────────────┘                      └─────────┬─────────┘
+                                                    │
+        ┌───────────────────────┬───────────────────┼───────────────────┐
+        ▼                       ▼                   ▼                   ▼
+  ┌───────────┐         ┌──────────────┐    ┌─────────────┐     ┌────────────┐
+  │ Postgres  │         │  Redis 7     │    │ apps/worker │     │  R2 / S3   │
+  │ + PostGIS │         │ cache+pubsub │    │ BullMQ jobs │     │ media+KYC  │
+  │     17    │         │  sessions    │    │ (NestJS)    │     │            │
+  └───────────┘         └──────────────┘    └──────┬──────┘     └────────────┘
+                                                   │
+                ┌──────────────┬───────────────────┼──────────────┬──────────────┐
+                ▼              ▼                   ▼              ▼              ▼
+          ┌──────────┐  ┌──────────────┐    ┌──────────┐  ┌────────────┐  ┌──────────┐
+          │  Hubtel  │  │  Whisper     │    │ Mapbox   │  │ AWS Rekog. │  │ Resend   │
+          │ MoMo+SMS │  │ voice→text   │    │ ETA+geo  │  │ KYC match  │  │ email    │
+          └──────────┘  └──────────────┘    └──────────┘  └────────────┘  └──────────┘
 ```
 
-## Run tasks
+**Why a modular monolith?** Easier to operate at MVP scale and easy to slice out modules into services later when a domain (payments, tracking) earns its own scaling story.
 
-To build the library use:
+The dedicated `apps/admin` Angular app is the back-office for the verification queue, dispute handling, ledger inspection and ops dashboards.
 
-```sh
-npx nx build pkg1
+---
+
+## 🧰 Tech stack
+
+| Layer                               | Choice                                                              | Version                         |
+| ----------------------------------- | ------------------------------------------------------------------- | ------------------------------- |
+| Monorepo                            | Nx + pnpm                                                           | 22.7 / pnpm 9+                  |
+| Web                                 | Angular (standalone, signals, SSR via `@angular/ssr`, esbuild, PWA) | 21                              |
+| Web UI                              | Angular Material + TailwindCSS                                      | 21 / 3                          |
+| Maps                                | Mapbox GL JS                                                        | latest                          |
+| API                                 | NestJS on Node 22 LTS                                               | 11                              |
+| ORM                                 | Prisma                                                              | 6                               |
+| Database                            | PostgreSQL + PostGIS                                                | 17 / 3.5                        |
+| Cache + pub-sub + sessions          | Redis (Valkey-compatible)                                           | 7                               |
+| Background jobs                     | BullMQ (Redis)                                                      | latest                          |
+| Realtime                            | Socket.IO                                                           | latest                          |
+| Object storage                      | Cloudflare R2 (prod) / MinIO (dev)                                  | latest                          |
+| Validation (single source of truth) | Zod                                                                 | 4                               |
+| Payments + SMS OTP                  | Hubtel (MoMo, cards, SMS)                                           | —                               |
+| Voice → text                        | OpenAI Whisper `large-v3` (provider toggleable)                     | —                               |
+| KYC face match                      | AWS Rekognition + Textract                                          | —                               |
+| Hosting                             | AWS Cape Town (`af-south-1`)                                        | ECS Fargate + RDS + ElastiCache |
+| Observability                       | OpenTelemetry → Grafana Cloud + Sentry                              | —                               |
+| Commit hooks                        | Husky + lint-staged + commitlint                                    | latest                          |
+| CI                                  | GitHub Actions (later milestone)                                    | —                               |
+
+---
+
+## 📁 Repo layout
+
+```
+theartisangh/
+├── apps/
+│   ├── web/                Angular 21 PWA (customer + artisan surfaces)
+│   ├── admin/              Angular 21 back-office (verification, disputes, ops)
+│   ├── api/                NestJS HTTP + WebSocket gateway
+│   ├── worker/             NestJS background-job consumer (BullMQ)
+│   ├── web-e2e/            Playwright E2E for web
+│   ├── admin-e2e/          Playwright E2E for admin
+│   ├── api-e2e/            Jest E2E for api
+│   └── worker-e2e/         Jest E2E for worker
+├── libs/
+│   ├── shared/types/       Zod schemas + inferred TS types (client ↔ server)
+│   ├── shared/i18n/        Translation catalogs (en / tw / ga / ee)
+│   ├── api/core/           Shared NestJS module (logger, config, filters)
+│   ├── web/api-client/     OpenAPI-generated client for Angular
+│   └── db/                 Prisma schema + generated client
+├── infra/
+│   └── docker/             Local dev compose (Postgres + Redis + MinIO + MailHog)
+├── .husky/                 Git hooks (pre-commit + commit-msg)
+├── .env.example            All env vars consumed by the stack
+├── nx.json                 Nx config (plugins, generators, targetDefaults)
+├── pnpm-workspace.yaml     apps/* + libs/**
+├── tsconfig.base.json      Strict TS for the whole workspace
+└── package.json            Convenience scripts (dev:*, db:*, prisma:*)
 ```
 
-To run any task with Nx use:
+---
 
-```sh
-npx nx <target> <project-name>
+## 🚀 Getting started (local dev)
+
+### Prerequisites
+
+- **Node 22+** (we recommend installing via [Volta](https://volta.sh) or `nvm`)
+- **pnpm 9+** (`corepack enable && corepack prepare pnpm@latest --activate`)
+- **Docker** (for local Postgres / Redis / MinIO)
+
+### First-time setup
+
+```bash
+# 1. Install dependencies
+pnpm install
+
+# 2. Copy env template and edit secrets as needed
+cp .env.example .env
+
+# 3. Bring up local services (Postgres + Redis + MinIO + MailHog)
+pnpm db:up
+
+# 4. Generate the Prisma client and apply migrations
+pnpm prisma:migrate
+
+# 5. Boot the four dev processes in separate terminals
+pnpm dev:api       # NestJS API on :3000
+pnpm dev:worker    # NestJS BullMQ worker
+pnpm dev:web       # Angular customer/artisan app on :4200
+pnpm dev:admin     # Angular admin app on :4300
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+### Useful root scripts
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+| Script                                       | What it does                                |
+| -------------------------------------------- | ------------------------------------------- |
+| `pnpm dev:api`                               | Run the API in watch mode                   |
+| `pnpm dev:web`                               | Run the Angular customer app                |
+| `pnpm dev:admin`                             | Run the Angular admin app                   |
+| `pnpm dev:worker`                            | Run the background worker                   |
+| `pnpm db:up` / `db:down` / `db:logs`         | Manage the local Docker stack               |
+| `pnpm prisma:migrate`                        | Run Prisma migrations against the local DB  |
+| `pnpm prisma:studio`                         | Open Prisma Studio                          |
+| `pnpm build`                                 | `nx run-many -t build` across the workspace |
+| `pnpm lint` / `pnpm typecheck` / `pnpm test` | Quality gates across the workspace          |
+| `pnpm exec nx graph`                         | Visualise the project graph                 |
 
-## Versioning and releasing
+---
 
-To version and release the library use
+## 🔐 Environment variables
 
-```
-npx nx release
-```
+See [`.env.example`](./.env.example) for the full set. Highlights:
 
-Pass `--dry-run` to see what would happen without actually releasing the library.
+- `DATABASE_URL` — Postgres connection string
+- `REDIS_URL` — Redis connection string
+- `S3_*` — object-storage credentials (MinIO locally, R2 in prod)
+- `HUBTEL_*` — payment + SMS OTP credentials
+- `MAPBOX_ACCESS_TOKEN` — tracking + geocoding
+- `WHISPER_PROVIDER` + `OPENAI_API_KEY` — voice transcription
+- `AWS_*` + `KYC_KMS_KEY_ID` — Ghana Card verification pipeline
+- `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` — auth signing keys
 
-[Learn more about Nx release &raquo;](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+---
 
-## Keep TypeScript project references up to date
+## 📈 Milestone roadmap & progress
 
-Nx automatically updates TypeScript [project references](https://www.typescriptlang.org/docs/handbook/project-references.html) in `tsconfig.json` files to ensure they remain accurate based on your project dependencies (`import` or `require` statements). This sync is automatically done when running tasks such as `build` or `typecheck`, which require updated references to function correctly.
+Each milestone updates this section and the relevant per-app/per-lib READMEs. Boxes are checked only when the verification steps in that milestone pass.
 
-To manually trigger the process to sync the project graph dependencies information to the TypeScript project references, run the following command:
+### ✅ Milestone 1 — Foundation (current)
 
-```sh
-npx nx sync
-```
+Goal: every subsequent milestone can start without touching scaffolding.
 
-You can enforce that the TypeScript project references are always in the correct state when running in CI by adding a step to your CI job configuration that runs the following command:
+- [x] Nx 22 monorepo with pnpm, integrated TS layout
+- [x] Four apps generated: `web`, `admin` (Angular 21 + Tailwind + Vitest + Playwright), `api`, `worker` (NestJS 11 + Jest)
+- [x] Shared libs: `shared/types` (Zod), `shared/i18n` (en/tw/ga/ee), `api/core`, `web/api-client`, `db`
+- [x] Prisma 6 schema covering users, artisan profiles, verifications, bookings, milestones, payments, ledger, tracking pings, messages, reviews, OTP attempts — with PostGIS geography columns
+- [x] Docker Compose for local dev: PostGIS 17, Redis 7, MinIO, MailHog (+ PostGIS init script)
+- [x] `.env.example` covering every integration slot (Hubtel, Mapbox, Whisper, AWS KYC, JWT, SMTP)
+- [x] Husky pre-commit (lint-staged) + commit-msg (commitlint, conventional commits)
+- [x] Prettier + ESLint (per-project flat config from Nx generators) + import-boundary plugin
+- [x] Root README + per-app/per-lib READMEs
 
-```sh
-npx nx sync:check
-```
+### ⏳ Milestone 2 — Auth + profiles
 
-[Learn more about nx sync](https://nx.dev/reference/nx-commands#sync)
+- [ ] `auth` module: phone + SMS OTP via Hubtel, rate-limited, OTPs in Redis
+- [ ] JWT access (15 min) + rotating refresh token in httpOnly cookie
+- [ ] Customer + artisan onboarding flows in `apps/web`
+- [ ] Profile read endpoints + basic search (`/artisans` by trade, by lat/lng radius using PostGIS `ST_DWithin`)
+- [ ] GitHub Actions CI workflow (lint + typecheck + test on every PR)
+- [ ] OpenAPI document published; `web/api-client` regenerated
 
-## Nx Cloud
+### ⏳ Milestone 3 — Verification (trust layer)
 
-Nx Cloud ensures a [fast and scalable CI](https://nx.dev/ci/intro/why-nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
+- [ ] Ghana Card + selfie upload via R2 signed URLs
+- [ ] Worker pipeline: AWS Rekognition face-match + Textract OCR + KMS column encryption
+- [ ] Admin queue UI in `apps/admin` for ambiguous cases
+- [ ] Verified badge surfaced in search + profile
 
-- [Remote caching](https://nx.dev/ci/features/remote-cache?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task distribution across multiple machines](https://nx.dev/ci/features/distribute-task-execution?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Automated e2e test splitting](https://nx.dev/ci/features/split-e2e-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task flakiness detection and rerunning](https://nx.dev/ci/features/flaky-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+### ⏳ Milestone 4 — Voice notes + i18n
 
-### Set up CI (non-Github Actions CI)
+- [ ] Browser MediaRecorder capture in `apps/web`
+- [ ] BullMQ `voice.transcribe` job with Whisper provider abstraction
+- [ ] ICU message bundles wired through `@angular/localize` for tw / ga / ee
+- [ ] Locale picker on first load, persisted per user
 
-**Note:** This is only required if your CI provider is not GitHub Actions.
+### ⏳ Milestone 5 — Bookings + escrow
 
-Use the following command to configure a CI workflow for your workspace:
+- [ ] Booking state machine (XState) in `libs/api/core`
+- [ ] Hubtel charge-in via MoMo push + card, webhook verification, idempotent
+- [ ] Milestone funding / release / refund + double-entry ledger
+- [ ] Dispute flow → admin ticket
+- [ ] Customer + artisan booking UIs
 
-```sh
-npx nx g ci-workflow
-```
+### ⏳ Milestone 6 — Live tracking
 
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+- [ ] Socket.IO gateway with booking-scoped rooms
+- [ ] `Geolocation.watchPosition` in artisan UI with battery-conscious throttling
+- [ ] Mapbox Directions ETA cached in Redis (~60s TTL)
+- [ ] PostGIS tracking-ping table partitioned monthly, downsampled after job completion
 
-## Install Nx Console
+### ⏳ Milestone 7 — Production hardening + deploy
 
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
+- [ ] Production Dockerfiles for `api`, `worker`, `web` (SSR)
+- [ ] Terraform / CDK for AWS Cape Town: ECS Fargate, RDS, ElastiCache, ALB, Secrets Manager
+- [ ] Cloudflare in front (CDN, WAF, R2)
+- [ ] OTel → Grafana Cloud; Sentry wired in all apps
+- [ ] Closed beta in one Accra suburb
 
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+---
 
-## Useful links
+## 📝 Convention: maintaining this README
 
-Learn more:
+> **At the end of every milestone, this README and the relevant per-app / per-lib READMEs must be updated:**
+>
+> - check the boxes that now pass their verification
+> - move newly discovered work into the appropriate milestone
+> - record any architecture decisions that diverged from the original plan in a new "Decisions" subsection of the affected milestone
+>
+> This is the single source of truth for the project plan. If it disagrees with the code, the code is right but the README is the bug.
 
-- [Learn more about this workspace setup](https://nx.dev/nx-api/js?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+---
 
-And join the Nx community:
+## 📜 License
 
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+UNLICENSED — proprietary, all rights reserved.

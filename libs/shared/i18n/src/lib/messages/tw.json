@@ -1,0 +1,13 @@
+{
+  "app.name": "The Artisan GH",
+  "app.tagline": "Hwehwɛ adwumayɛfo a wogye wodi wɔ Ghana",
+  "auth.login": "Bra mu",
+  "auth.phonePrompt": "Kyerɛw wo telefon nɔma",
+  "auth.otpPrompt": "Kyerɛw nɔma 6 a yɛde maa wo",
+  "booking.requestService": "Bisa adwuma",
+  "booking.voiceNote": "Twerɛ nne",
+  "trade.plumber": "Nsu adwumayɛfo",
+  "trade.electrician": "Anyinam adwumayɛfo",
+  "trade.mason": "Dansin adwumayɛfo",
+  "trade.carpenter": "Duadwumayɛfo"
+}

@@ -1,0 +1,8 @@
+{
+  "name": "@artisangh/admin-e2e",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "name": "admin-e2e"
+  }
+}

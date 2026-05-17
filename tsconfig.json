@@ -2,5 +2,39 @@
   "extends": "./tsconfig.base.json",
   "compileOnSave": false,
   "files": [],
-  "references": []
+  "references": [
+    {
+      "path": "./apps/web-e2e"
+    },
+    {
+      "path": "./apps/admin-e2e"
+    },
+    {
+      "path": "./apps/api-e2e"
+    },
+    {
+      "path": "./apps/api"
+    },
+    {
+      "path": "./apps/worker-e2e"
+    },
+    {
+      "path": "./apps/worker"
+    },
+    {
+      "path": "./libs/shared/types"
+    },
+    {
+      "path": "./libs/shared/i18n"
+    },
+    {
+      "path": "./libs/api/core"
+    },
+    {
+      "path": "./libs/web/api-client"
+    },
+    {
+      "path": "./libs/db"
+    }
+  ]
 }

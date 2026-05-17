@@ -1,0 +1,13 @@
+{
+  "app.name": "The Artisan GH",
+  "app.tagline": "Find trusted artisans, anywhere in Ghana",
+  "auth.login": "Log in",
+  "auth.phonePrompt": "Enter your phone number",
+  "auth.otpPrompt": "Enter the 6-digit code we sent you",
+  "booking.requestService": "Request a service",
+  "booking.voiceNote": "Record voice note",
+  "trade.plumber": "Plumber",
+  "trade.electrician": "Electrician",
+  "trade.mason": "Mason",
+  "trade.carpenter": "Carpenter"
+}

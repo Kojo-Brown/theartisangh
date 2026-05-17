@@ -47,3 +47,21 @@ Thumbs.db
 .claude/settings.local.json
 .nx/polygraph
 .nx/self-healing
+.angular
+
+__screenshots__/
+
+test-output
+
+vitest.config.*.timestamp*
+
+# Project-specific
+.env
+.env.*
+!.env.example
+*.local
+infra/docker/.env
+
+# Prisma
+libs/db/node_modules/.prisma
+libs/db/prisma/migrations/dev.db*
