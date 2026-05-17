@@ -2,7 +2,9 @@ name: artisangh-dev
 
 services:
   postgres:
-    image: postgis/postgis:17-3.5
+    # The official postgis/postgis image has no arm64 build for 17-3.5 (yet).
+    # imresamu/postgis is the de-facto multi-arch fork, identical CLI + extensions.
+    image: imresamu/postgis:17-3.5-alpine
     container_name: artisangh_postgres
     restart: unless-stopped
     environment:
@@ -58,13 +60,14 @@ services:
       timeout: 5s
       retries: 10
 
-  mailhog:
-    image: mailhog/mailhog:latest
-    container_name: artisangh_mailhog
+  # MailHog is unmaintained and has no arm64 image — using its modern drop-in replacement.
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: artisangh_mailpit
     restart: unless-stopped
     ports:
-      - '1025:1025'
-      - '8025:8025'
+      - '1025:1025' # SMTP
+      - '8025:8025' # Web UI
 
 volumes:
   postgres_data:
