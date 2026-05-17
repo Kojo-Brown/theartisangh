@@ -35,6 +35,12 @@
     },
     {
       "path": "./libs/db"
+    },
+    {
+      "path": "./apps/admin"
+    },
+    {
+      "path": "./apps/web"
     }
   ]
 }
