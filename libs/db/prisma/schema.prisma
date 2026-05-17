@@ -15,7 +15,9 @@ generator client {
 datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
-  extensions = [postgis]
+  // postgis ships with these companion extensions in the image; declare them so
+  // `prisma migrate` doesn't try to remove them on every diff.
+  extensions = [postgis, postgis_topology, postgis_tiger_geocoder, fuzzystrmatch, pgcrypto, uuidOssp(map: "uuid-ossp")]
 }
 
 // ─────────────────────────────────────────────────────────────

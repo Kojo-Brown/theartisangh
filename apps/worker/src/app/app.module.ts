@@ -1,10 +1,28 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { BullModule } from '@nestjs/bullmq';
+import { ConfigService } from '@nestjs/config';
+import { ApiCoreModule, type Env } from '@artisangh/api-core';
+import { QUEUES } from './queues/queue-names';
+import { SmsConsumer } from './queues/sms.consumer';
 
 @Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    ApiCoreModule,
+    BullModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService<Env, true>) => {
+        const url = new URL(config.get('REDIS_URL'));
+        return {
+          connection: {
+            host: url.hostname,
+            port: Number(url.port || 6379),
+            password: url.password || undefined,
+          },
+        };
+      },
+    }),
+    BullModule.registerQueue({ name: QUEUES.smsSend }),
+  ],
+  providers: [SmsConsumer],
 })
 export class AppModule {}

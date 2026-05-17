@@ -12,10 +12,11 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-artisan}
       POSTGRES_DB: ${POSTGRES_DB:-artisan}
     ports:
-      - '5432:5432'
+      # Host port is 55432 to avoid collision with locally-installed Postgres (5432) or
+      # other Postgres dev mappings (5433). Update DATABASE_URL accordingly.
+      - '55432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./init-postgis.sql:/docker-entrypoint-initdb.d/00-postgis.sql:ro
     healthcheck:
       test:
         [
