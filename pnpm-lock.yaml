@@ -79,6 +79,9 @@ importers:
       '@prisma/client':
         specifier: ^6
         version: 6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3)
+      '@xstate/inspect':
+        specifier: ^0.8.0
+        version: 0.8.0(@types/ws@8.18.1)(ws@8.18.0)(xstate@5.31.1)
       axios:
         specifier: ^1.6.0
         version: 1.15.0
@@ -121,6 +124,9 @@ importers:
       rxjs:
         specifier: ~7.8.0
         version: 7.8.2
+      xstate:
+        specifier: ^5.31.1
+        version: 5.31.1
     devDependencies:
       '@angular-devkit/core':
         specifier: ~21.2.0
@@ -6946,6 +6952,19 @@ packages:
       webpack-dev-server: '*'
     peerDependenciesMeta:
       webpack-dev-server:
+        optional: true
+
+  '@xstate/inspect@0.8.0':
+    resolution:
+      {
+        integrity: sha512-wSkFeOnp+7dhn+zTThO0M4D2FEqZN9lGIWowJu5JLa2ojjtlzRwK8SkjcHZ4rLX8VnMev7kGjgQLrGs8kxy+hw==,
+      }
+    peerDependencies:
+      '@types/ws': ^8.0.0
+      ws: ^8.0.0
+      xstate: ^4.37.0
+    peerDependenciesMeta:
+      '@types/ws':
         optional: true
 
   '@xtuc/ieee754@1.2.0':
@@ -15473,6 +15492,12 @@ packages:
         integrity: sha512-JZnDKK8B0RCDw84FNdDAIpZK+JuJw+s7Lz8nksI7SIuU3UXJJslUthsi+uWBUYOwPFwW7W7PRLRfUKpxjtjFCw==,
       }
 
+  xstate@5.31.1:
+    resolution:
+      {
+        integrity: sha512-3P7t7GQ61BvLu+8Cj6Zq7rcS34vecL9pvfN2ucUWmIFIUG+rAREviOs4Xy4OO3BuJHSz6RLU8eqDXxSbVotjDQ==,
+      }
+
   y18n@5.0.8:
     resolution:
       {
@@ -20685,6 +20710,14 @@ snapshots:
       webpack-cli: 5.1.4(webpack-dev-server@5.2.3)(webpack@5.105.2)
     optionalDependencies:
       webpack-dev-server: 5.2.3(tslib@2.8.1)(webpack-cli@5.1.4(webpack-dev-server@5.2.3)(webpack@5.105.2))(webpack@5.105.2(@swc/core@1.15.8(@swc/helpers@0.5.18))(esbuild@0.27.3)(lightningcss@1.32.0)(postcss@8.5.12)(webpack-cli@5.1.4(webpack-dev-server@5.2.3)(webpack@5.105.2)))
+
+  '@xstate/inspect@0.8.0(@types/ws@8.18.1)(ws@8.18.0)(xstate@5.31.1)':
+    dependencies:
+      fast-safe-stringify: 2.1.1
+      ws: 8.18.0
+      xstate: 5.31.1
+    optionalDependencies:
+      '@types/ws': 8.18.1
 
   '@xtuc/ieee754@1.2.0': {}
 
@@ -26429,6 +26462,8 @@ snapshots:
   xml-naming@0.1.0: {}
 
   xmlchars@2.2.0: {}
+
+  xstate@5.31.1: {}
 
   y18n@5.0.8: {}
 

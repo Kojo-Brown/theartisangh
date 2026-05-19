@@ -18,7 +18,15 @@ interface ArtisanIntroJob {
   hintLocale: TranscriptLocale | null;
 }
 
-type VoiceTranscribeJob = ArtisanIntroJob;
+interface BookingRequestJob {
+  kind: 'bookingRequest';
+  bookingId: string;
+  userId: string;
+  key: string;
+  hintLocale: TranscriptLocale | null;
+}
+
+type VoiceTranscribeJob = ArtisanIntroJob | BookingRequestJob;
 
 @Processor(QUEUES.voiceTranscribe)
 export class VoiceConsumer extends WorkerHost {
@@ -53,6 +61,14 @@ export class VoiceConsumer extends WorkerHost {
           voiceIntroTranscript: result.text,
           voiceIntroLocale: result.detectedLocale,
           voiceIntroDurationSec: result.durationSeconds ?? null,
+        },
+      });
+    } else if (data.kind === 'bookingRequest') {
+      await this.prisma.booking.update({
+        where: { id: data.bookingId },
+        data: {
+          transcript: result.text,
+          transcriptLocale: result.detectedLocale,
         },
       });
     }

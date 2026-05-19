@@ -66,6 +66,14 @@ export const EnvSchema = z.object({
   WHISPER_MODEL: z.string().default('whisper-1'),
   OPENAI_API_KEY: z.string().optional(),
   VOICE_MAX_DURATION_SECONDS: z.coerce.number().int().positive().default(60),
+
+  // Payments
+  PAYMENT_PROVIDER: z.enum(['stub', 'hubtel']).default('stub'),
+  HUBTEL_MERCHANT_ACCOUNT: z.string().optional(),
+  HUBTEL_PAYMENT_CALLBACK_URL: z
+    .string()
+    .url()
+    .default('http://localhost:3000/api/payments/webhook'),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

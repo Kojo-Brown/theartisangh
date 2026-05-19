@@ -28,4 +28,12 @@ export const appRoutes: Route[] = [
         (m) => m.QueueDetailComponent,
       ),
   },
+  {
+    path: 'disputes',
+    canActivate: [adminGuard],
+    loadComponent: () =>
+      import('./features/disputes/disputes.component').then(
+        (m) => m.DisputesComponent,
+      ),
+  },
 ];

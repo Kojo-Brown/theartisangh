@@ -61,6 +61,65 @@ export interface SearchArtisansParams {
   verifiedOnly?: boolean;
 }
 
+export type BookingStatus =
+  | 'REQUESTED'
+  | 'ACCEPTED'
+  | 'EN_ROUTE'
+  | 'ON_SITE'
+  | 'IN_PROGRESS'
+  | 'COMPLETED'
+  | 'RELEASED'
+  | 'CANCELLED'
+  | 'DISPUTED'
+  | 'REFUNDED';
+
+export interface BookingSummary {
+  id: string;
+  customerId: string;
+  artisanId: string;
+  status: BookingStatus;
+  trade: string;
+  description?: string | null;
+  transcript?: string | null;
+  scheduledAt?: string | null;
+  totalAmount: string;
+  currency: string;
+  jobAddress?: string | null;
+  createdAt: string;
+  customer: { id: string; fullName: string; phone: string };
+  artisan: { id: string; fullName: string; phone: string };
+}
+
+export interface BookingDetail extends BookingSummary {
+  voiceNoteKey?: string | null;
+  voiceNoteUrl?: string | null;
+  payments: Array<{
+    id: string;
+    state: 'PENDING' | 'HELD' | 'RELEASED' | 'REFUNDED' | 'FAILED';
+    amount: string;
+    channel: string;
+    hubtelRef?: string | null;
+    createdAt: string;
+  }>;
+}
+
+export interface CreateBookingBody {
+  artisanId: string;
+  trade: string;
+  description?: string;
+  voiceNoteKey?: string;
+  scheduledAt?: string;
+  jobLocation: { lat: number; lng: number };
+  jobAddress?: string;
+  totalAmount: number;
+}
+
+export interface CreateBookingResponse {
+  booking: BookingSummary;
+  payment: { id: string; state: string; amount: string };
+  checkoutUrl: string | null;
+}
+
 export interface UpsertArtisanProfileBody {
   trades: string[];
   bio?: string;
@@ -250,6 +309,67 @@ export class ApiClient {
         body: input,
       },
     );
+  }
+
+  // ── Bookings ─────────────────────────────────────────────
+  startBookingVoiceUpload(
+    contentType: string,
+  ): Promise<{ key: string; url: string; expiresInSeconds: number }> {
+    return this.fetch('POST', '/bookings/voice-upload-url', {
+      body: { contentType },
+    });
+  }
+
+  createBooking(input: CreateBookingBody): Promise<CreateBookingResponse> {
+    return this.fetch('POST', '/bookings', { body: input });
+  }
+
+  listBookings(): Promise<BookingSummary[]> {
+    return this.fetch('GET', '/bookings', {});
+  }
+
+  bookingById(id: string): Promise<BookingDetail> {
+    return this.fetch('GET', `/bookings/${encodeURIComponent(id)}`, {});
+  }
+
+  bookingAction(
+    id: string,
+    action:
+      | 'accept'
+      | 'decline'
+      | 'en-route'
+      | 'arrive'
+      | 'start-work'
+      | 'complete'
+      | 'confirm'
+      | 'cancel',
+  ): Promise<BookingSummary> {
+    return this.fetch(
+      'POST',
+      `/bookings/${encodeURIComponent(id)}/${action}`,
+      {},
+    );
+  }
+
+  disputeBooking(id: string, reason: string): Promise<BookingSummary> {
+    return this.fetch('POST', `/bookings/${encodeURIComponent(id)}/dispute`, {
+      body: { reason },
+    });
+  }
+
+  // Admin disputes
+  adminDisputesQueue(): Promise<BookingDetail[]> {
+    return this.fetch('GET', '/bookings/admin/disputes', {});
+  }
+
+  adminResolveBooking(
+    id: string,
+    resolution: 'RELEASE' | 'REFUND',
+    reason?: string,
+  ): Promise<BookingSummary> {
+    return this.fetch('POST', `/bookings/${encodeURIComponent(id)}/resolve`, {
+      body: { resolution, reason },
+    });
   }
 
   /** Direct presigned PUT — does not go through fetch() so it bypasses bearer auth. */

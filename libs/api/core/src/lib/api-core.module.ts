@@ -7,6 +7,7 @@ import { StorageModule } from './storage/storage.module';
 import { KycModule } from './kyc/kyc.module';
 import { CryptoModule } from './crypto/crypto.module';
 import { VoiceModule } from './voice/voice.module';
+import { PaymentsCoreModule } from './payments/payments.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { VoiceModule } from './voice/voice.module';
     CryptoModule,
     KycModule,
     VoiceModule,
+    PaymentsCoreModule,
   ],
   exports: [
     AppConfigModule,
@@ -28,6 +30,7 @@ import { VoiceModule } from './voice/voice.module';
     CryptoModule,
     KycModule,
     VoiceModule,
+    PaymentsCoreModule,
   ],
 })
 export class ApiCoreModule {}

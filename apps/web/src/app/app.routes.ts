@@ -58,4 +58,28 @@ export const appRoutes: Route[] = [
         (m) => m.ArtisanDetailComponent,
       ),
   },
+  {
+    path: 'artisans/:id/request',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/bookings/request-booking.component').then(
+        (m) => m.RequestBookingComponent,
+      ),
+  },
+  {
+    path: 'bookings',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/bookings/bookings-list.component').then(
+        (m) => m.BookingsListComponent,
+      ),
+  },
+  {
+    path: 'bookings/:id',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/bookings/booking-detail.component').then(
+        (m) => m.BookingDetailComponent,
+      ),
+  },
 ];

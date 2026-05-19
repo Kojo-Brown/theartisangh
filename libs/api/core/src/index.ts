@@ -22,3 +22,6 @@ export * from './lib/kyc/kyc.interface';
 export * from './lib/kyc/kyc.module';
 export * from './lib/voice/transcriber.interface';
 export * from './lib/voice/voice.module';
+export * from './lib/bookings/booking-machine';
+export * from './lib/payments/payment.interface';
+export * from './lib/payments/payments.module';

@@ -1,13 +1,15 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { API_CLIENT } from '../../core/api.token';
 import type { ArtisanProfile } from '@artisangh/web-api-client';
+import { AuthStore } from '../../core/auth.store';
 
 type ArtisanDetail = ArtisanProfile & { voiceIntroUrl?: string | null };
 
 @Component({
   selector: 'app-artisan-detail',
   standalone: true,
+  imports: [RouterLink],
   template: `
     @if (loading()) {
       <p class="text-sm text-slate-500">Loading…</p>
@@ -53,9 +55,23 @@ type ArtisanDetail = ArtisanProfile & { voiceIntroUrl?: string | null };
           </div>
         }
 
-        <p class="mt-6 text-xs text-slate-400">
-          Booking flow lands in Milestone 5.
-        </p>
+        <div class="mt-6">
+          @if (auth.isAuthed()) {
+            <a
+              [routerLink]="['/artisans', p.id, 'request']"
+              class="inline-block bg-emerald-600 text-white rounded px-4 py-2"
+            >
+              Request this artisan
+            </a>
+          } @else {
+            <a
+              routerLink="/auth/login"
+              class="inline-block bg-emerald-600 text-white rounded px-4 py-2"
+            >
+              Log in to book
+            </a>
+          }
+        </div>
       </div>
     }
   `,
@@ -63,6 +79,7 @@ type ArtisanDetail = ArtisanProfile & { voiceIntroUrl?: string | null };
 export class ArtisanDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly api = inject(API_CLIENT);
+  protected readonly auth = inject(AuthStore);
 
   protected readonly profile = signal<ArtisanDetail | null>(null);
   protected readonly loading = signal(false);

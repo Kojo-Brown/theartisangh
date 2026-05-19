@@ -254,15 +254,24 @@ Goal: every subsequent milestone can start without touching scaffolding.
 - We kept the lightweight `@artisangh/shared-i18n` JSON-message approach rather than wiring `@angular/localize` ICU bundles. The shared signal-based `I18nService` works for both `apps/web` and `apps/admin` and avoids the build-time locale-fork that `@angular/localize` requires. Reconsidered if ICU plural rules become necessary.
 - Whisper-large-v3 has only fair coverage for Twi/Ga/Ewe today — English code-switching in the audio works best. A manual-correction loop is a likely follow-up.
 
-### ⏳ Milestone 5 — Bookings + escrow ← **NEXT**
+### ✅ Milestone 5 — Bookings + escrow
 
-- [ ] Booking state machine (XState) in `libs/api/core`
-- [ ] Hubtel charge-in via MoMo push + card, webhook verification, idempotent
-- [ ] Milestone funding / release / refund + double-entry ledger
-- [ ] Dispute flow → admin ticket
-- [ ] Customer + artisan booking UIs
+- [x] **Booking state machine** (XState v5) in `@artisangh/api-core`. States: `REQUESTED → ACCEPTED → EN_ROUTE → ON_SITE → IN_PROGRESS → COMPLETED → RELEASED`; side paths to `CANCELLED`, `DISPUTED`, `REFUNDED`. Role-aware guards distinguish customer / artisan / admin actions. Pure function — service layer persists each transition.
+- [x] **Hubtel charge-in adapter + dev stub** behind a `PaymentProvider` interface in api-core. Stub auto-settles synchronously; `HubtelPaymentProvider` calls Online Checkout, verifies webhook signatures with HMAC-SHA256, and parses canonical webhook bodies. Switch with `PAYMENT_PROVIDER=hubtel`.
+- [x] **Escrow + double-entry ledger**: every transition that moves money writes `CHARGE/HOLD/RELEASE/REFUND/PAYOUT` rows to `LedgerEntry`. Customer's funds are held from creation; released to the artisan when the customer confirms; refunded on cancel/dispute-refund. `jobsCompleted` increments on release.
+- [x] **Dispute flow**: either party at `IN_PROGRESS` or `COMPLETED` can dispute → state becomes `DISPUTED`, funds frozen. Admin resolves to `RELEASED` or `REFUNDED` from the disputes queue.
+- [x] **Customer UI**: "Request this artisan" → describe job (text and/or 60s voice note via the M4 recorder) → set location/time/amount → confirm + pay. Dev stub auto-confirms; real Hubtel redirects to checkout. Voice notes enqueue `voice.transcribe` (kind=bookingRequest) and the transcript appears on the booking detail page.
+- [x] **Booking list + detail**: `/bookings` for both roles with status badges; detail page renders state-aware action buttons (Accept/Decline/Start/Arrive/Complete for artisans; Confirm/Dispute/Cancel for customers).
+- [x] **Admin disputes queue** (`/disputes` in apps/admin): list of `DISPUTED` bookings with parties, payments, and Release/Refund actions.
 
-### ⏳ Milestone 6 — Live tracking
+**Decisions worth knowing:**
+
+- v1 of bookings is **single-amount escrow** (one charge held, released on completion). The `Milestone` model in Prisma supports per-milestone funding but the UI doesn't expose it yet — coming when we need it.
+- The booking state machine is a **pure function** (`transition(current, event)` returns next state or a rejection reason). The DB row is the source of truth; the machine is re-instantiated per transition. This avoids ever having a divergent in-memory machine.
+- Payout currently happens inline on release. For real Hubtel, this should move to a `payment.reconcile` BullMQ job so retries are isolated from the request path. Queue exists; consumer is a follow-up.
+- `voice.transcribe` discriminates on `kind` (`artisanIntro` from M4, `bookingRequest` from M5). Same worker code; new entity to update.
+
+### ⏳ Milestone 6 — Live tracking ← **NEXT**
 
 - [ ] Socket.IO gateway with booking-scoped rooms
 - [ ] `Geolocation.watchPosition` in artisan UI with battery-conscious throttling

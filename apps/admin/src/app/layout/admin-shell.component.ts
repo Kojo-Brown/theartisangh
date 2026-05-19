@@ -14,9 +14,8 @@ import { AdminAuthStore } from '../core/admin-auth.store';
         <a routerLink="/" class="font-semibold text-lg">Artisan GH · Admin</a>
         @if (auth.isAuthed()) {
           <nav class="flex items-center gap-4 text-sm">
-            <a routerLink="/queue" class="hover:underline"
-              >Verification queue</a
-            >
+            <a routerLink="/queue" class="hover:underline">Verifications</a>
+            <a routerLink="/disputes" class="hover:underline">Disputes</a>
             <span class="text-slate-400">{{ auth.user()?.fullName }}</span>
             <button
               (click)="auth.signOut()"

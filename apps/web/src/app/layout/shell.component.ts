@@ -20,6 +20,7 @@ import { TranslatePipe } from '../core/translate.pipe';
           @if (auth.isAuthed()) {
             <a routerLink="/dashboard" class="hover:underline">Dashboard</a>
             <a routerLink="/search" class="hover:underline">Find artisans</a>
+            <a routerLink="/bookings" class="hover:underline">Bookings</a>
             <button
               (click)="auth.signOut()"
               class="text-rose-600 hover:underline"

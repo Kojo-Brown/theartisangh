@@ -37,6 +37,7 @@ src/
 - M2 ✅ `auth`, `users`, `artisans` modules live. Helmet + CORS + cookie-parser + global Zod validation + throttler. OpenAPI exposed at `/api/docs` and `/api/openapi.json`.
 - M3 ✅ `verification` module live: presigned S3 uploads, submit-for-review enqueues `kyc.verify`, admin queue + detail + review endpoints.
 - M4 ✅ `voice` module: presigned audio upload, submit-for-transcription enqueues `voice.transcribe`. Artisan detail endpoint now returns a presigned playback URL.
+- M5 ✅ `bookings` + `payments` modules: full escrow lifecycle, XState-driven transitions, dispute flow, double-entry ledger.
 
 ## Endpoints (M2)
 
@@ -63,3 +64,33 @@ src/
 | GET    | `/api/verification/queue`      | Bearer+ADMIN | Pending submissions, oldest first.                                                |
 | GET    | `/api/verification/:id`        | Bearer+ADMIN | Includes presigned GET URLs for all three photos.                                 |
 | PATCH  | `/api/verification/:id/review` | Bearer+ADMIN | Body: `{ decision: APPROVED \| REJECTED, reason? }`.                              |
+
+## Endpoints (M4 — voice)
+
+| Method | Path                            | Auth   | Notes                                                                 |
+| ------ | ------------------------------- | ------ | --------------------------------------------------------------------- |
+| POST   | `/api/voice/intro/upload-url`   | Bearer | Body: `{ contentType }`. Returns presigned PUT URL for direct upload. |
+| POST   | `/api/voice/intro/submit`       | Bearer | Body: `{ key, hintLocale?, durationSeconds? }`. Enqueues transcribe.  |
+| GET    | `/api/voice/intro/playback-url` | Bearer | Presigned GET URL for the caller's own voice intro.                   |
+
+## Endpoints (M5 — bookings + payments)
+
+| Method | Path                              | Auth              | Notes                                                                                                                                             |
+| ------ | --------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| POST   | `/api/bookings/voice-upload-url`  | Bearer            | Body: `{ contentType }`. Presigned PUT for the request's voice note.                                                                              |
+| POST   | `/api/bookings`                   | Bearer            | Body: `{ artisanId, trade, description?, voiceNoteKey?, scheduledAt?, jobLocation, totalAmount }`. Creates the booking + initiates escrow charge. |
+| GET    | `/api/bookings`                   | Bearer            | Caller's bookings (customer + artisan views).                                                                                                     |
+| GET    | `/api/bookings/:id`               | Bearer            | Detail with payments + presigned voice URL.                                                                                                       |
+| POST   | `/api/bookings/:id/accept`        | Bearer (artisan)  | REQUESTED → ACCEPTED                                                                                                                              |
+| POST   | `/api/bookings/:id/decline`       | Bearer (artisan)  | REQUESTED → CANCELLED                                                                                                                             |
+| POST   | `/api/bookings/:id/cancel`        | Bearer (customer) | → CANCELLED (any pre-IN_PROGRESS state)                                                                                                           |
+| POST   | `/api/bookings/:id/en-route`      | Bearer (artisan)  | ACCEPTED → EN_ROUTE                                                                                                                               |
+| POST   | `/api/bookings/:id/arrive`        | Bearer (artisan)  | EN_ROUTE → ON_SITE                                                                                                                                |
+| POST   | `/api/bookings/:id/start-work`    | Bearer (artisan)  | ON_SITE → IN_PROGRESS                                                                                                                             |
+| POST   | `/api/bookings/:id/complete`      | Bearer (artisan)  | IN_PROGRESS → COMPLETED                                                                                                                           |
+| POST   | `/api/bookings/:id/confirm`       | Bearer (customer) | COMPLETED → RELEASED (triggers payout)                                                                                                            |
+| POST   | `/api/bookings/:id/dispute`       | Bearer            | Body: `{ reason }`. → DISPUTED, freezes funds.                                                                                                    |
+| GET    | `/api/bookings/admin/disputes`    | Bearer+ADMIN      | All DISPUTED bookings.                                                                                                                            |
+| POST   | `/api/bookings/:id/resolve`       | Bearer+ADMIN      | Body: `{ resolution: RELEASE \| REFUND, reason? }`.                                                                                               |
+| GET    | `/api/payments/:bookingId/status` | Bearer            | All payment rows + state for a booking.                                                                                                           |
+| POST   | `/api/payments/webhook`           | Public            | Hubtel webhook target. HMAC-SHA256 verified; ignores unsigned/unknown refs.                                                                       |
