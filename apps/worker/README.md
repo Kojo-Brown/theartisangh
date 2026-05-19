@@ -30,3 +30,4 @@ pnpm dev:worker
 - M1 ✅ scaffolded as a default Nest app.
 - M2 ✅ BullMQ wired; `sms.send` consumer active and delegates to the shared `SMS_PROVIDER` injection token from `@artisangh/api-core` (Console stub in dev, Hubtel adapter when `SMS_PROVIDER=hubtel`).
 - M3 ✅ `kyc.verify` consumer reads photos from S3, runs face-match + OCR through the shared provider interfaces, KMS-encrypts the Ghana Card number, and writes the decision back to the `Verification` row. Stub providers in dev auto-approve at the configured similarity; AWS adapters activate when `KYC_PROVIDER=aws`.
+- M4 ✅ `voice.transcribe` consumer reads audio from S3, calls the `Transcriber` provider (Stub in dev, OpenAI Whisper when `WHISPER_PROVIDER=openai`), and writes transcript + detected locale back to the artisan profile. Job payload discriminates on `kind` so M5 booking voice notes can reuse the queue.

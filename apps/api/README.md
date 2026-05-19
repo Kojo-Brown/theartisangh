@@ -36,6 +36,7 @@ src/
 - M1 ✅ scaffolded as a default Nest app.
 - M2 ✅ `auth`, `users`, `artisans` modules live. Helmet + CORS + cookie-parser + global Zod validation + throttler. OpenAPI exposed at `/api/docs` and `/api/openapi.json`.
 - M3 ✅ `verification` module live: presigned S3 uploads, submit-for-review enqueues `kyc.verify`, admin queue + detail + review endpoints.
+- M4 ✅ `voice` module: presigned audio upload, submit-for-transcription enqueues `voice.transcribe`. Artisan detail endpoint now returns a presigned playback URL.
 
 ## Endpoints (M2)
 

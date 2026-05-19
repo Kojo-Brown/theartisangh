@@ -20,3 +20,5 @@ export * from './lib/crypto/encryptor.interface';
 export * from './lib/crypto/crypto.module';
 export * from './lib/kyc/kyc.interface';
 export * from './lib/kyc/kyc.module';
+export * from './lib/voice/transcriber.interface';
+export * from './lib/voice/voice.module';

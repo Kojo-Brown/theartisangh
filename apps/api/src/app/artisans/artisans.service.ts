@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '@artisangh/api-core';
+import { PrismaService, S3Service } from '@artisangh/api-core';
 import { Prisma } from '@prisma/client';
 import type {
   UpsertArtisanProfileDto,
@@ -8,7 +8,10 @@ import type {
 
 @Injectable()
 export class ArtisansService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly s3: S3Service,
+  ) {}
 
   async upsertProfile(userId: string, dto: UpsertArtisanProfileDto) {
     // Promote the user to ARTISAN role if not already.
@@ -135,6 +138,12 @@ export class ArtisansService {
       },
     });
     if (!profile) throw new NotFoundException('Artisan not found');
-    return profile;
+    const voiceIntroUrl = profile.voiceIntroKey
+      ? await this.s3.signDownload(
+          this.s3.bucket('media'),
+          profile.voiceIntroKey,
+        )
+      : null;
+    return { ...profile, voiceIntroUrl };
   }
 }

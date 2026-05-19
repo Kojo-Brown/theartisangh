@@ -15,6 +15,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ArtisansModule } from './artisans/artisans.module';
 import { VerificationModule } from './verification/verification.module';
+import { VoiceApiModule } from './voice/voice.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { VerificationModule } from './verification/verification.module';
     UsersModule,
     ArtisansModule,
     VerificationModule,
+    VoiceApiModule,
   ],
   providers: [
     { provide: APP_PIPE, useClass: ZodValidationPipe },

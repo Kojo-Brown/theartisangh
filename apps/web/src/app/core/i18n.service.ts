@@ -48,6 +48,10 @@ export class I18nService {
     } catch {
       /* ignore */
     }
+    const tag = (navigator?.language ?? 'en').toLowerCase();
+    if (tag.startsWith('tw') || tag.startsWith('ak')) return 'tw';
+    if (tag.startsWith('ga')) return 'ga';
+    if (tag.startsWith('ee') || tag.startsWith('ew')) return 'ee';
     return 'en';
   }
 }

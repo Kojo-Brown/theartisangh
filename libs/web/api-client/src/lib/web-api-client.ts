@@ -27,6 +27,10 @@ export interface ArtisanProfile {
   ratingAvg: number;
   ratingCount: number;
   jobsCompleted: number;
+  voiceIntroKey?: string | null;
+  voiceIntroTranscript?: string | null;
+  voiceIntroLocale?: Locale | null;
+  voiceIntroDurationSec?: number | null;
   user?: {
     id: string;
     fullName: string;
@@ -176,6 +180,27 @@ export class ApiClient {
 
   artisanById(id: string): Promise<ArtisanProfile> {
     return this.fetch('GET', `/artisans/${encodeURIComponent(id)}`, {});
+  }
+
+  // ── Voice ────────────────────────────────────────────────
+  startVoiceUpload(
+    contentType: string,
+  ): Promise<{ key: string; url: string; expiresInSeconds: number }> {
+    return this.fetch('POST', '/voice/intro/upload-url', {
+      body: { contentType },
+    });
+  }
+
+  submitVoiceIntro(input: {
+    key: string;
+    hintLocale?: Locale;
+    durationSeconds?: number;
+  }): Promise<{ status: 'transcribing'; profileId: string }> {
+    return this.fetch('POST', '/voice/intro/submit', { body: input });
+  }
+
+  voiceIntroPlaybackUrl(): Promise<{ url: string | null }> {
+    return this.fetch('GET', '/voice/intro/playback-url', {});
   }
 
   // ── Verification ─────────────────────────────────────────

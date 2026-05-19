@@ -35,6 +35,7 @@ pnpm dev:web   # http://localhost:4200
 - M1 ✅ scaffolded with Tailwind, SSR, Vitest, Playwright.
 - M2 ✅ end-to-end auth flow + onboarding + search.
 - M3 ✅ verification flow (Ghana Card front+back+selfie via camera or upload, direct presigned PUT to S3, then submit). Dashboard surfaces the status (approved / pending / rejected) with retry-on-rejection.
+- M4 ✅ voice intro recorder integrated into artisan onboarding (browser MediaRecorder, up to 60s, browser-direct upload). Customers hear the intro on the artisan detail page with the transcript inline. Translation catalogs expanded to ~50 keys per locale; locale auto-detects from `navigator.language` on first load.
 
 ## Routes (M2)
 

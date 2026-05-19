@@ -6,6 +6,7 @@ import { SmsModule } from './sms/sms.module';
 import { StorageModule } from './storage/storage.module';
 import { KycModule } from './kyc/kyc.module';
 import { CryptoModule } from './crypto/crypto.module';
+import { VoiceModule } from './voice/voice.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { CryptoModule } from './crypto/crypto.module';
     StorageModule,
     CryptoModule,
     KycModule,
+    VoiceModule,
   ],
   exports: [
     AppConfigModule,
@@ -25,6 +27,7 @@ import { CryptoModule } from './crypto/crypto.module';
     StorageModule,
     CryptoModule,
     KycModule,
+    VoiceModule,
   ],
 })
 export class ApiCoreModule {}

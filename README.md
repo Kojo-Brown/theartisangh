@@ -239,14 +239,22 @@ Goal: every subsequent milestone can start without touching scaffolding.
 - Encrypted Ghana Card numbers are stored as `Bytes` (`ghanaCardNumberEnc`) with `ghanaCardLast4` exposed for display. Wire format for the local AES-GCM encryptor is `[12B IV][16B tag][ciphertext]` — opaque to the rest of the app.
 - The admin app reuses `@artisangh/web-api-client` (same `ApiClient`) — only the `role === 'ADMIN'` gate in `AdminAuthStore` differs.
 
-### ⏳ Milestone 4 — Voice notes + i18n ← **NEXT**
+### ✅ Milestone 4 — Voice notes + i18n
 
-- [ ] Browser MediaRecorder capture in `apps/web`
-- [ ] BullMQ `voice.transcribe` job with Whisper provider abstraction
-- [ ] ICU message bundles wired through `@angular/localize` for tw / ga / ee
-- [ ] Locale picker on first load, persisted per user
+- [x] Browser MediaRecorder capture as a reusable `VoiceRecorderComponent` in `apps/web/src/app/shared`. Records up to 60s, picks the best supported MIME type (Opus/WebM/Ogg/MP4), surfaces live elapsed time, plays back before submit.
+- [x] `voice.transcribe` BullMQ queue + worker consumer. Reads audio from S3, calls the `Transcriber` provider, writes transcript + detected locale back to the artisan profile.
+- [x] Whisper provider abstraction in `@artisangh/api-core`: `StubTranscriber` returns a canned transcript so dev works without OpenAI keys; `OpenAiTranscriber` calls `/v1/audio/transcriptions` with `response_format=verbose_json` for language detection. Activated via `WHISPER_PROVIDER=openai`.
+- [x] Showcase feature: **artisan voice intro**. Artisans record a self-intro during onboarding; the audio uploads directly to MinIO/R2 via a presigned PUT; the worker transcribes asynchronously. Customers play it back on the artisan detail page with the transcript shown alongside.
+- [x] Translation catalogs expanded to ~50 keys per locale covering nav, auth, onboarding, verification, search, voice. Locale auto-detects from `navigator.language` (covers Twi/Akan, Ga, Ewe) on first load; picker still wins.
+- [x] Prisma migration `20260519100352_voice_intro` adds `voiceIntroKey`, `voiceIntroTranscript`, `voiceIntroLocale`, `voiceIntroDurationSec` to `ArtisanProfile`.
 
-### ⏳ Milestone 5 — Bookings + escrow
+**Decisions worth knowing:**
+
+- Voice infrastructure ships ready for M5 booking voice notes — the same `voice.transcribe` queue and `Transcriber` interface will handle booking job-request audio. The job payload uses a `kind: 'artisanIntro'` discriminator so new use cases slot in cleanly.
+- We kept the lightweight `@artisangh/shared-i18n` JSON-message approach rather than wiring `@angular/localize` ICU bundles. The shared signal-based `I18nService` works for both `apps/web` and `apps/admin` and avoids the build-time locale-fork that `@angular/localize` requires. Reconsidered if ICU plural rules become necessary.
+- Whisper-large-v3 has only fair coverage for Twi/Ga/Ewe today — English code-switching in the audio works best. A manual-correction loop is a likely follow-up.
+
+### ⏳ Milestone 5 — Bookings + escrow ← **NEXT**
 
 - [ ] Booking state machine (XState) in `libs/api/core`
 - [ ] Hubtel charge-in via MoMo push + card, webhook verification, idempotent

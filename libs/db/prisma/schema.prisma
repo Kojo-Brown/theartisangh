@@ -131,6 +131,12 @@ model ArtisanProfile {
   ratingCount     Int      @default(0)
   jobsCompleted   Int      @default(0)
 
+  // Voice intro (M4) — artisan-recorded self-introduction.
+  voiceIntroKey         String? // S3 object key in the media bucket
+  voiceIntroTranscript  String?
+  voiceIntroLocale      Locale?
+  voiceIntroDurationSec Float?
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }

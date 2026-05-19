@@ -5,6 +5,7 @@ import { ApiCoreModule, type Env } from '@artisangh/api-core';
 import { QUEUES } from './queues/queue-names';
 import { SmsConsumer } from './queues/sms.consumer';
 import { KycConsumer } from './queues/kyc.consumer';
+import { VoiceConsumer } from './queues/voice.consumer';
 
 @Module({
   imports: [
@@ -24,7 +25,8 @@ import { KycConsumer } from './queues/kyc.consumer';
     }),
     BullModule.registerQueue({ name: QUEUES.smsSend }),
     BullModule.registerQueue({ name: QUEUES.kycVerify }),
+    BullModule.registerQueue({ name: QUEUES.voiceTranscribe }),
   ],
-  providers: [SmsConsumer, KycConsumer],
+  providers: [SmsConsumer, KycConsumer, VoiceConsumer],
 })
 export class AppModule {}

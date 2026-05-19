@@ -60,6 +60,12 @@ export const EnvSchema = z.object({
   LOCAL_ENCRYPTION_KEY: z
     .string()
     .default('dGhpcy1pcy1ub3QtYS1zZWNyZXQtdXNlLWluLWRldi1vbmx5LSE='),
+
+  // Voice transcription
+  WHISPER_PROVIDER: z.enum(['stub', 'openai']).default('stub'),
+  WHISPER_MODEL: z.string().default('whisper-1'),
+  OPENAI_API_KEY: z.string().optional(),
+  VOICE_MAX_DURATION_SECONDS: z.coerce.number().int().positive().default(60),
 });
 
 export type Env = z.infer<typeof EnvSchema>;
