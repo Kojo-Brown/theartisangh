@@ -68,6 +68,43 @@ export interface UpsertArtisanProfileBody {
   baseAddress?: string;
 }
 
+export type VerificationStatusValue =
+  | 'UNVERIFIED'
+  | 'PENDING'
+  | 'APPROVED'
+  | 'REJECTED';
+
+export interface VerificationStatus {
+  status: VerificationStatusValue;
+  ghanaCardLast4?: string | null;
+  reviewedAt?: string | null;
+  rejectionReason?: string | null;
+}
+
+export interface AdminVerificationRow {
+  id: string;
+  userId: string;
+  status: VerificationStatusValue;
+  ghanaCardLast4?: string | null;
+  createdAt: string;
+  user: {
+    id: string;
+    fullName: string;
+    phone: string;
+    role: string;
+    locale: string;
+  };
+}
+
+export interface AdminVerificationDetail extends AdminVerificationRow {
+  rejectionReason?: string | null;
+  signedUrls: {
+    front: string | null;
+    back: string | null;
+    selfie: string | null;
+  };
+}
+
 export interface ApiClientOptions {
   baseUrl: string;
   getAccessToken?: () => string | null;
@@ -139,6 +176,71 @@ export class ApiClient {
 
   artisanById(id: string): Promise<ArtisanProfile> {
     return this.fetch('GET', `/artisans/${encodeURIComponent(id)}`, {});
+  }
+
+  // ── Verification ─────────────────────────────────────────
+  startVerification(input: {
+    frontContentType: string;
+    backContentType: string;
+    selfieContentType: string;
+  }): Promise<{
+    bucket: string;
+    front: { key: string; url: string };
+    back: { key: string; url: string };
+    selfie: { key: string; url: string };
+  }> {
+    return this.fetch('POST', '/verification/start', { body: input });
+  }
+
+  submitVerification(input: {
+    ghanaCardNumber: string;
+    frontKey: string;
+    backKey: string;
+    selfieKey: string;
+  }): Promise<VerificationStatus> {
+    return this.fetch('POST', '/verification/submit', { body: input });
+  }
+
+  myVerification(): Promise<VerificationStatus> {
+    return this.fetch('GET', '/verification/me', {});
+  }
+
+  // ── Admin ────────────────────────────────────────────────
+  adminVerificationQueue(): Promise<AdminVerificationRow[]> {
+    return this.fetch('GET', '/verification/queue', {});
+  }
+
+  adminVerificationDetail(id: string): Promise<AdminVerificationDetail> {
+    return this.fetch('GET', `/verification/${encodeURIComponent(id)}`, {});
+  }
+
+  adminReviewVerification(
+    id: string,
+    input: { decision: 'APPROVED' | 'REJECTED'; reason?: string },
+  ): Promise<unknown> {
+    return this.fetch(
+      'PATCH',
+      `/verification/${encodeURIComponent(id)}/review`,
+      {
+        body: input,
+      },
+    );
+  }
+
+  /** Direct presigned PUT — does not go through fetch() so it bypasses bearer auth. */
+  async uploadToSignedUrl(url: string, file: Blob): Promise<void> {
+    const res = await fetch(url, {
+      method: 'PUT',
+      headers: { 'content-type': file.type },
+      body: file,
+    });
+    if (!res.ok) {
+      throw new ApiError(
+        res.status,
+        `Upload failed (${res.status})`,
+        await res.text(),
+      );
+    }
   }
 
   private async fetch<T>(

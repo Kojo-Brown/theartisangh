@@ -1,0 +1,316 @@
+// The Artisan GH — Prisma schema
+// Engine: PostgreSQL 17 + PostGIS 3.5
+//
+// Geographic columns use the `Unsupported("geography(Point, 4326)")` type so
+// Prisma stores them as opaque values while raw SQL / PostGIS handles
+// distance + radius queries. Tracking pings + artisan base locations are
+// indexed with GiST in a follow-up migration.
+
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../node_modules/.prisma/client"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [postgis]
+}
+
+// ─────────────────────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────────────────────
+
+enum UserRole {
+  CUSTOMER
+  ARTISAN
+  ADMIN
+}
+
+enum Locale {
+  EN
+  TW // Twi
+  GA // Ga
+  EE // Ewe
+}
+
+enum VerificationStatus {
+  UNVERIFIED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum BookingStatus {
+  REQUESTED
+  ACCEPTED
+  EN_ROUTE
+  ON_SITE
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  DISPUTED
+}
+
+enum PaymentChannel {
+  MOMO_MTN
+  MOMO_VODAFONE
+  MOMO_AIRTELTIGO
+  CARD
+}
+
+enum PaymentState {
+  PENDING
+  HELD
+  RELEASED
+  REFUNDED
+  FAILED
+}
+
+enum MilestoneState {
+  PENDING
+  FUNDED
+  COMPLETED
+  RELEASED
+  DISPUTED
+}
+
+enum LedgerEntryKind {
+  CHARGE
+  HOLD
+  RELEASE
+  REFUND
+  PAYOUT
+  FEE
+}
+
+// ─────────────────────────────────────────────────────────────
+// Identity
+// ─────────────────────────────────────────────────────────────
+
+model User {
+  id              String   @id @default(uuid()) @db.Uuid
+  phone           String   @unique // E.164, e.g. +233...
+  email           String?  @unique
+  fullName        String
+  role            UserRole @default(CUSTOMER)
+  locale          Locale   @default(EN)
+  avatarUrl       String?
+  isActive        Boolean  @default(true)
+  lastSeenAt      DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  artisanProfile  ArtisanProfile?
+  verification    Verification?
+  customerBookings Booking[] @relation("CustomerBookings")
+  artisanBookings  Booking[] @relation("ArtisanBookings")
+  sentMessages    Message[]  @relation("MessageSender")
+  reviewsGiven    Review[]   @relation("ReviewAuthor")
+  reviewsReceived Review[]   @relation("ReviewSubject")
+}
+
+model ArtisanProfile {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @unique @db.Uuid
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  trades          String[] // e.g. ["plumber", "electrician"]
+  bio             String?
+  yearsExperience Int      @default(0)
+  hourlyRate      Decimal? @db.Decimal(10, 2)
+  currency        String   @default("GHS")
+  serviceRadiusKm Int      @default(10)
+  baseLocation    Unsupported("geography(Point, 4326)")?
+  baseAddress     String?
+
+  ratingAvg       Float    @default(0)
+  ratingCount     Int      @default(0)
+  jobsCompleted   Int      @default(0)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Verification {
+  id               String             @id @default(uuid()) @db.Uuid
+  userId           String             @unique @db.Uuid
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  ghanaCardNumberEnc Bytes?           // KMS-encrypted, only last-4 surfaced in app
+  ghanaCardLast4     String?
+  frontPhotoKey      String?          // object-storage key (R2)
+  backPhotoKey       String?
+  selfieKey          String?
+
+  status             VerificationStatus @default(UNVERIFIED)
+  rejectionReason    String?
+  reviewerId         String?            @db.Uuid
+  reviewedAt         DateTime?
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────────────────────
+// Bookings + lifecycle
+// ─────────────────────────────────────────────────────────────
+
+model Booking {
+  id               String         @id @default(uuid()) @db.Uuid
+  customerId       String         @db.Uuid
+  customer         User           @relation("CustomerBookings", fields: [customerId], references: [id])
+  artisanId        String         @db.Uuid
+  artisan          User           @relation("ArtisanBookings", fields: [artisanId], references: [id])
+
+  status           BookingStatus  @default(REQUESTED)
+  trade            String
+  description      String?
+  voiceNoteKey     String?
+  transcript       String?
+  transcriptLocale Locale?
+
+  scheduledAt      DateTime?
+  jobLocation      Unsupported("geography(Point, 4326)")?
+  jobAddress       String?
+
+  totalAmount      Decimal        @db.Decimal(12, 2)
+  currency         String         @default("GHS")
+
+  milestones       Milestone[]
+  payments         Payment[]
+  trackingPings    TrackingPing[]
+  messages         Message[]
+  review           Review?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([artisanId])
+  @@index([status])
+}
+
+model Milestone {
+  id          String         @id @default(uuid()) @db.Uuid
+  bookingId   String         @db.Uuid
+  booking     Booking        @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  sequence    Int
+  title       String
+  amount      Decimal        @db.Decimal(12, 2)
+  state       MilestoneState @default(PENDING)
+  completedAt DateTime?
+  releasedAt  DateTime?
+
+  @@unique([bookingId, sequence])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Payments + ledger
+// ─────────────────────────────────────────────────────────────
+
+model Payment {
+  id           String         @id @default(uuid()) @db.Uuid
+  bookingId    String         @db.Uuid
+  booking      Booking        @relation(fields: [bookingId], references: [id])
+  milestoneId  String?        @db.Uuid
+
+  hubtelRef    String?        @unique
+  channel      PaymentChannel
+  amount       Decimal        @db.Decimal(12, 2)
+  currency     String         @default("GHS")
+  state        PaymentState   @default(PENDING)
+  rawWebhook   Json?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([bookingId])
+  @@index([state])
+}
+
+model LedgerEntry {
+  id          String          @id @default(uuid()) @db.Uuid
+  bookingId   String?         @db.Uuid
+  paymentId   String?         @db.Uuid
+  kind        LedgerEntryKind
+  amount      Decimal         @db.Decimal(14, 2)
+  currency    String          @default("GHS")
+  memo        String?
+  createdAt   DateTime        @default(now())
+
+  @@index([bookingId])
+  @@index([paymentId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Live tracking
+// ─────────────────────────────────────────────────────────────
+
+model TrackingPing {
+  id          BigInt   @id @default(autoincrement())
+  bookingId   String   @db.Uuid
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  location    Unsupported("geography(Point, 4326)")
+  accuracyM   Float?
+  speedMps    Float?
+  recordedAt  DateTime @default(now())
+
+  @@index([bookingId, recordedAt])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Chat
+// ─────────────────────────────────────────────────────────────
+
+model Message {
+  id          String   @id @default(uuid()) @db.Uuid
+  bookingId   String   @db.Uuid
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  senderId    String   @db.Uuid
+  sender      User     @relation("MessageSender", fields: [senderId], references: [id])
+
+  body        String?
+  voiceKey    String?
+  imageKey    String?
+  readAt      DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([bookingId, createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Reviews
+// ─────────────────────────────────────────────────────────────
+
+model Review {
+  id          String   @id @default(uuid()) @db.Uuid
+  bookingId   String   @unique @db.Uuid
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  authorId    String   @db.Uuid
+  author      User     @relation("ReviewAuthor", fields: [authorId], references: [id])
+  subjectId   String   @db.Uuid
+  subject     User     @relation("ReviewSubject", fields: [subjectId], references: [id])
+
+  rating      Int
+  body        String?
+  voiceKey    String?
+  createdAt   DateTime @default(now())
+
+  @@index([subjectId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// OTP (transient — could move to Redis; kept here for audit/anti-fraud)
+// ─────────────────────────────────────────────────────────────
+
+model OtpAttempt {
+  id        String   @id @default(uuid()) @db.Uuid
+  phone     String
+  ipAddress String?
+  success   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([phone, createdAt])
+}

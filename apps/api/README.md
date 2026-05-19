@@ -35,6 +35,7 @@ src/
 
 - M1 ✅ scaffolded as a default Nest app.
 - M2 ✅ `auth`, `users`, `artisans` modules live. Helmet + CORS + cookie-parser + global Zod validation + throttler. OpenAPI exposed at `/api/docs` and `/api/openapi.json`.
+- M3 ✅ `verification` module live: presigned S3 uploads, submit-for-review enqueues `kyc.verify`, admin queue + detail + review endpoints.
 
 ## Endpoints (M2)
 
@@ -50,3 +51,14 @@ src/
 | GET    | `/api/artisans/:id`     | Public | Artisan detail.                                                                    |
 | PUT    | `/api/artisans/me`      | Bearer | Upsert caller's artisan profile (also promotes role to `ARTISAN`).                 |
 | GET    | `/api/artisans/me`      | Bearer | Caller's artisan profile.                                                          |
+
+## Endpoints (M3 — verification)
+
+| Method | Path                           | Auth         | Notes                                                                             |
+| ------ | ------------------------------ | ------------ | --------------------------------------------------------------------------------- |
+| POST   | `/api/verification/start`      | Bearer       | Body: content types. Returns presigned PUT URLs for front/back/selfie.            |
+| POST   | `/api/verification/submit`     | Bearer       | Body: `{ ghanaCardNumber, frontKey, backKey, selfieKey }`. Enqueues `kyc.verify`. |
+| GET    | `/api/verification/me`         | Bearer       | Current status + last-4 of card.                                                  |
+| GET    | `/api/verification/queue`      | Bearer+ADMIN | Pending submissions, oldest first.                                                |
+| GET    | `/api/verification/:id`        | Bearer+ADMIN | Includes presigned GET URLs for all three photos.                                 |
+| PATCH  | `/api/verification/:id/review` | Bearer+ADMIN | Body: `{ decision: APPROVED \| REJECTED, reason? }`.                              |

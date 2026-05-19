@@ -8,7 +8,7 @@ async function bootstrap() {
     bufferLogs: true,
   });
   app.useLogger(app.get(PinoLogger));
-  Logger.log('🛠  Worker booted — consumers attached: sms.send');
+  Logger.log('🛠  Worker booted — consumers attached: sms.send, kyc.verify');
 
   const shutdown = async (signal: string) => {
     Logger.log(`${signal} received, shutting down worker…`);

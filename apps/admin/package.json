@@ -1,0 +1,12 @@
+{
+  "name": "@artisangh/admin",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "name": "admin"
+  },
+  "dependencies": {
+    "@artisangh/shared-types": "workspace:*",
+    "@artisangh/web-api-client": "workspace:*"
+  }
+}

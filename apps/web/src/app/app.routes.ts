@@ -37,6 +37,14 @@ export const appRoutes: Route[] = [
       ),
   },
   {
+    path: 'verification',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/verification/verification.component').then(
+        (m) => m.VerificationComponent,
+      ),
+  },
+  {
     path: 'search',
     loadComponent: () =>
       import('./features/search/search.component').then(

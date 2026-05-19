@@ -23,4 +23,23 @@ pnpm dev:admin   # http://localhost:4300
 
 ## Milestone status
 
-- M1 ✅ scaffolded. No business code yet.
+- M1 ✅ scaffolded.
+- M3 ✅ functional. Phone+OTP login enforcing `role=ADMIN`, verification queue + detail view + approve/reject.
+
+## Routes
+
+| Path         | Component              | Auth   |
+| ------------ | ---------------------- | ------ |
+| `/login`     | `AdminLoginComponent`  | Public |
+| `/queue`     | `QueueComponent`       | Admin  |
+| `/queue/:id` | `QueueDetailComponent` | Admin  |
+
+## Bootstrapping the first admin
+
+There is no public registration path for the ADMIN role. Use the CLI:
+
+```bash
+pnpm admin:promote +233241234567 "Your Name"
+```
+
+Then sign in at `http://localhost:4300/login` with that phone number. The OTP will print in the worker terminal (dev stub) just like any other user.

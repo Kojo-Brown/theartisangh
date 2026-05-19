@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { ApiCoreModule, type Env } from '@artisangh/api-core';
 import { QUEUES } from './queues/queue-names';
 import { SmsConsumer } from './queues/sms.consumer';
+import { KycConsumer } from './queues/kyc.consumer';
 
 @Module({
   imports: [
@@ -22,7 +23,8 @@ import { SmsConsumer } from './queues/sms.consumer';
       },
     }),
     BullModule.registerQueue({ name: QUEUES.smsSend }),
+    BullModule.registerQueue({ name: QUEUES.kycVerify }),
   ],
-  providers: [SmsConsumer],
+  providers: [SmsConsumer, KycConsumer],
 })
 export class AppModule {}

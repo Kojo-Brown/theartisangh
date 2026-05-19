@@ -34,6 +34,7 @@ pnpm dev:web   # http://localhost:4200
 
 - M1 ✅ scaffolded with Tailwind, SSR, Vitest, Playwright.
 - M2 ✅ end-to-end auth flow + onboarding + search.
+- M3 ✅ verification flow (Ghana Card front+back+selfie via camera or upload, direct presigned PUT to S3, then submit). Dashboard surfaces the status (approved / pending / rejected) with retry-on-rejection.
 
 ## Routes (M2)
 
@@ -46,6 +47,7 @@ pnpm dev:web   # http://localhost:4200
 | `/dashboard`          | `DashboardComponent`           | Required |
 | `/search`             | `SearchComponent` (PostGIS)    | Public   |
 | `/artisans/:id`       | `ArtisanDetailComponent`       | Public   |
+| `/verification`       | `VerificationComponent`        | Required |
 
 ## State + i18n
 

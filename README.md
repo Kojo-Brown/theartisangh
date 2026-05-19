@@ -224,14 +224,22 @@ Goal: every subsequent milestone can start without touching scaffolding.
 - Prisma owns the PostGIS extension family (`postgis`, `postgis_topology`, `postgis_tiger_geocoder`, `fuzzystrmatch`, `pgcrypto`, `uuid-ossp`). The init SQL script was removed — `prisma migrate dev` installs everything.
 - The Angular apps need `lib: ["es2022", "dom"]` and the project-references flags (`composite`, `declaration`, `declarationMap`, `emitDeclarationOnly`) explicitly unset; baked into `apps/{web,admin}/tsconfig.json`.
 
-### ⏳ Milestone 3 — Verification (trust layer) ← **NEXT**
+### ✅ Milestone 3 — Verification (trust layer)
 
-- [ ] Ghana Card + selfie upload via R2 signed URLs
-- [ ] Worker pipeline: AWS Rekognition face-match + Textract OCR + KMS column encryption
-- [ ] Admin queue UI in `apps/admin` for ambiguous cases
-- [ ] Verified badge surfaced in search + profile
+- [x] Ghana Card front + back + selfie uploaded via S3 presigned PUT URLs. MinIO locally (auto-bucket creation on boot); Cloudflare R2 in prod via the same S3 client.
+- [x] Worker `kyc.verify` pipeline runs face-match + ID OCR through provider interfaces, KMS-encrypts the card number, and writes the decision (`APPROVED` / `PENDING` / `REJECTED`).
+- [x] Provider abstractions in `@artisangh/api-core`: `FaceMatchProvider`, `IdOcrProvider`, `Encryptor`. Dev stubs auto-approve with a configurable similarity (default 95) and AES-256-GCM encryption with a local key; AWS adapters (Rekognition `CompareFaces`, Textract `AnalyzeID`, KMS `Encrypt`/`Decrypt`) activate when `KYC_PROVIDER=aws` + creds + `KYC_KMS_KEY_ID` are set.
+- [x] Admin app (`apps/admin`) now functional: phone+OTP login enforcing `role=ADMIN`, verification queue, detail view with all three photos (via presigned GETs), approve/reject actions.
+- [x] Verified badge already surfaces in `/artisans` search results (search joins `Verification` and returns `verified: boolean`); dashboard shows the artisan's own status with retry-on-rejection.
+- [x] Admin bootstrap CLI: `pnpm admin:promote +233241234567 "Nicholas Brown"` — the only way to mint an ADMIN account.
 
-### ⏳ Milestone 4 — Voice notes + i18n
+**Decisions worth knowing:**
+
+- KYC pipeline thresholds: `KYC_AUTO_APPROVE_THRESHOLD` (default 90) goes straight to APPROVED, 60–89 lands in PENDING (admin review), <60 is REJECTED. OCR card number mismatch always sends to PENDING regardless of face score.
+- Encrypted Ghana Card numbers are stored as `Bytes` (`ghanaCardNumberEnc`) with `ghanaCardLast4` exposed for display. Wire format for the local AES-GCM encryptor is `[12B IV][16B tag][ciphertext]` — opaque to the rest of the app.
+- The admin app reuses `@artisangh/web-api-client` (same `ApiClient`) — only the `role === 'ADMIN'` gate in `AdminAuthStore` differs.
+
+### ⏳ Milestone 4 — Voice notes + i18n ← **NEXT**
 
 - [ ] Browser MediaRecorder capture in `apps/web`
 - [ ] BullMQ `voice.transcribe` job with Whisper provider abstraction
