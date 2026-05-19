@@ -53,6 +53,7 @@
     "serve": {
       "continuous": true,
       "executor": "@angular/build:dev-server",
+      "dependsOn": ["^build"],
       "configurations": {
         "production": {
           "buildTarget": "admin:build:production"
