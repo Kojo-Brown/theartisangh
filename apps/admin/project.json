@@ -68,6 +68,7 @@
     },
     "test": {
       "executor": "@angular/build:unit-test",
+      "dependsOn": ["^build"],
       "options": {}
     },
     "serve-static": {
