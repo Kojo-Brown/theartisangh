@@ -1,8 +1,8 @@
 import {
   ApplicationConfig,
   inject,
-  provideBrowserGlobalErrorListeners,
   provideAppInitializer,
+  provideBrowserGlobalErrorListeners,
 } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import {
@@ -13,6 +13,7 @@ import { ApiClient } from '@artisangh/web-api-client';
 import { appRoutes } from './app.routes';
 import { API_CLIENT } from './core/api.token';
 import { AuthStore } from './core/auth.store';
+import { TokenStore } from './core/token.store';
 import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {
@@ -21,26 +22,37 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideRouter(appRoutes, withComponentInputBinding()),
 
-    // ApiClient depends on AuthStore for the bearer token, but AuthStore depends
-    // on ApiClient — break the cycle by lazily reading the store after creation.
+    // ApiClient + AuthStore both depend on TokenStore, never on each other.
     {
       provide: API_CLIENT,
       useFactory: () => {
-        let store: AuthStore | undefined;
-        const client: ApiClient = new ApiClient({
+        const tokens = inject(TokenStore);
+        return new ApiClient({
           baseUrl: environment.apiBaseUrl,
-          getAccessToken: () => store?.accessToken() ?? null,
-          onUnauthorized: () => store?.refresh() ?? Promise.resolve(null),
+          getAccessToken: () => tokens.get(),
+          onUnauthorized: async () => {
+            // 401 → try to rotate the refresh token. Done directly via fetch to
+            // avoid pulling AuthStore in here (would form a cycle again).
+            try {
+              const res = await fetch(
+                `${environment.apiBaseUrl}/api/auth/refresh`,
+                {
+                  method: 'POST',
+                  credentials: 'include',
+                },
+              );
+              if (!res.ok) return null;
+              const data = (await res.json()) as { accessToken?: string };
+              if (data.accessToken) {
+                tokens.set(data.accessToken);
+                return data.accessToken;
+              }
+              return null;
+            } catch {
+              return null;
+            }
+          },
         });
-        // attach store after Angular has constructed AuthStore (lazy)
-        queueMicrotask(() => {
-          try {
-            store = inject(AuthStore, { optional: true }) ?? undefined;
-          } catch {
-            /* SSR */
-          }
-        });
-        return client;
       },
     },
 

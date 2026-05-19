@@ -9,6 +9,7 @@ import { ApiClient } from '@artisangh/web-api-client';
 import { appRoutes } from './app.routes';
 import { API_CLIENT } from './core/api.token';
 import { AdminAuthStore } from './core/admin-auth.store';
+import { TokenStore } from './core/token.store';
 import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {
@@ -18,20 +19,12 @@ export const appConfig: ApplicationConfig = {
     {
       provide: API_CLIENT,
       useFactory: () => {
-        let store: AdminAuthStore | undefined;
-        const client: ApiClient = new ApiClient({
+        const tokens = inject(TokenStore);
+        return new ApiClient({
           baseUrl: environment.apiBaseUrl,
-          getAccessToken: () => store?.accessToken() ?? null,
+          getAccessToken: () => tokens.get(),
           onUnauthorized: () => Promise.resolve(null),
         });
-        queueMicrotask(() => {
-          try {
-            store = inject(AdminAuthStore, { optional: true }) ?? undefined;
-          } catch {
-            /* SSR */
-          }
-        });
-        return client;
       },
     },
     provideAppInitializer(() => {
