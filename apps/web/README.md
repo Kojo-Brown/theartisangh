@@ -36,19 +36,23 @@ pnpm dev:web   # http://localhost:4200
 - M2 ✅ end-to-end auth flow + onboarding + search.
 - M3 ✅ verification flow (Ghana Card front+back+selfie via camera or upload, direct presigned PUT to S3, then submit). Dashboard surfaces the status (approved / pending / rejected) with retry-on-rejection.
 - M4 ✅ voice intro recorder integrated into artisan onboarding (browser MediaRecorder, up to 60s, browser-direct upload). Customers hear the intro on the artisan detail page with the transcript inline. Translation catalogs expanded to ~50 keys per locale; locale auto-detects from `navigator.language` on first load.
+- M5 ✅ Booking flow end-to-end. Customer "Request this artisan" page accepts text + voice description, geolocation, scheduled time, and amount; dev stub auto-confirms payment, real Hubtel redirects to checkout. `/bookings` list shows status badges. `/bookings/:id` detail surfaces state-aware action buttons (Accept/Decline/Start/Arrive/Complete for artisans, Confirm/Dispute/Cancel for customers).
 
 ## Routes (M2)
 
-| Path                  | Component                      | Auth     |
-| --------------------- | ------------------------------ | -------- |
-| `/`                   | `HomeComponent`                | Public   |
-| `/auth/login`         | `LoginComponent` (phone → OTP) | Public   |
-| `/onboarding`         | `RolePickComponent`            | Required |
-| `/onboarding/artisan` | `ArtisanOnboardingComponent`   | Required |
-| `/dashboard`          | `DashboardComponent`           | Required |
-| `/search`             | `SearchComponent` (PostGIS)    | Public   |
-| `/artisans/:id`       | `ArtisanDetailComponent`       | Public   |
-| `/verification`       | `VerificationComponent`        | Required |
+| Path                    | Component                      | Auth     |
+| ----------------------- | ------------------------------ | -------- |
+| `/`                     | `HomeComponent`                | Public   |
+| `/auth/login`           | `LoginComponent` (phone → OTP) | Public   |
+| `/onboarding`           | `RolePickComponent`            | Required |
+| `/onboarding/artisan`   | `ArtisanOnboardingComponent`   | Required |
+| `/dashboard`            | `DashboardComponent`           | Required |
+| `/search`               | `SearchComponent` (PostGIS)    | Public   |
+| `/artisans/:id`         | `ArtisanDetailComponent`       | Public   |
+| `/verification`         | `VerificationComponent`        | Required |
+| `/artisans/:id/request` | `RequestBookingComponent`      | Required |
+| `/bookings`             | `BookingsListComponent`        | Required |
+| `/bookings/:id`         | `BookingDetailComponent`       | Required |
 
 ## State + i18n
 

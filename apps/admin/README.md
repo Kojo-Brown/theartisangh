@@ -25,6 +25,7 @@ pnpm dev:admin   # http://localhost:4300
 
 - M1 ✅ scaffolded.
 - M3 ✅ functional. Phone+OTP login enforcing `role=ADMIN`, verification queue + detail view + approve/reject.
+- M5 ✅ Disputes queue at `/disputes`: lists `DISPUTED` bookings with parties + payments; Release / Refund actions hit `POST /api/bookings/:id/resolve`.
 
 ## Routes
 
@@ -33,6 +34,7 @@ pnpm dev:admin   # http://localhost:4300
 | `/login`     | `AdminLoginComponent`  | Public |
 | `/queue`     | `QueueComponent`       | Admin  |
 | `/queue/:id` | `QueueDetailComponent` | Admin  |
+| `/disputes`  | `DisputesComponent`    | Admin  |
 
 ## Bootstrapping the first admin
 
