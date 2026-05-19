@@ -20,10 +20,10 @@
     "db:up": "docker compose -f infra/docker/compose.dev.yml up -d",
     "db:down": "docker compose -f infra/docker/compose.dev.yml down",
     "db:logs": "docker compose -f infra/docker/compose.dev.yml logs -f",
-    "prisma:generate": "pnpm --filter @artisangh/db prisma generate",
-    "prisma:migrate": "pnpm --filter @artisangh/db prisma migrate dev",
-    "prisma:studio": "pnpm --filter @artisangh/db prisma studio",
-    "admin:promote": "tsx tools/scripts/promote-admin.ts",
+    "prisma:generate": "dotenv -e .env -- pnpm --filter @artisangh/db prisma generate",
+    "prisma:migrate": "dotenv -e .env -- pnpm --filter @artisangh/db prisma migrate dev",
+    "prisma:studio": "dotenv -e .env -- pnpm --filter @artisangh/db prisma studio",
+    "admin:promote": "dotenv -e .env -- tsx tools/scripts/promote-admin.ts",
     "prepare": "husky"
   },
   "devDependencies": {
@@ -68,6 +68,7 @@
     "@vitest/coverage-v8": "~4.1.0",
     "angular-eslint": "^21.2.0",
     "autoprefixer": "^10.4.0",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9.8.0",
     "eslint-config-prettier": "^10.0.0",
     "eslint-plugin-playwright": "^1.6.2",
