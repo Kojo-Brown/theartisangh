@@ -1,4 +1,4 @@
-import { inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 
 const KEY = 'artisangh-admin:accessToken';
@@ -6,14 +6,17 @@ const KEY = 'artisangh-admin:accessToken';
 @Injectable({ providedIn: 'root' })
 export class TokenStore {
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
-  private token: string | null = this.isBrowser ? this.safeRead() : null;
+  private readonly token = signal<string | null>(
+    this.isBrowser ? this.safeRead() : null,
+  );
 
+  /** Reactive read — touching this inside a computed/effect tracks changes. */
   get(): string | null {
-    return this.token;
+    return this.token();
   }
 
   set(token: string | null): void {
-    this.token = token;
+    this.token.set(token);
     if (!this.isBrowser) return;
     try {
       if (token) localStorage.setItem(KEY, token);
