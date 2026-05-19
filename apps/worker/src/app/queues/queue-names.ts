@@ -11,3 +11,12 @@ export interface SmsSendJob {
   to: string;
   body: string;
 }
+
+export interface KycVerifyJob {
+  verificationId: string;
+  userId: string;
+  frontKey: string;
+  backKey: string;
+  selfieKey: string;
+  ghanaCardNumber: string;
+}

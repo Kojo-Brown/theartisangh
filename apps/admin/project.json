@@ -6,6 +6,10 @@
   "sourceRoot": "apps/admin/src",
   "tags": [],
   "targets": {
+    "typecheck": {
+      "executor": "nx:noop",
+      "_comment": "See apps/web/project.json — same reason."
+    },
     "build": {
       "executor": "@angular/build:application",
       "outputs": ["{options.outputPath}"],

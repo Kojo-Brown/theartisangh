@@ -82,7 +82,9 @@ jobs:
         run: pnpm exec nx affected -t typecheck --parallel=3
 
       - name: Test
-        run: pnpm exec nx affected -t test --parallel=3 --passWithNoTests
+        # Don't pass --passWithNoTests here; the Angular vitest runner schema
+        # rejects it. Per-project test targets already opt in where Jest runs.
+        run: pnpm exec nx affected -t test --parallel=3
 
       - name: Build
         run: pnpm exec nx affected -t build --parallel=3

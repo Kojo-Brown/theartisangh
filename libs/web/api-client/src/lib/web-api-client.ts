@@ -300,7 +300,7 @@ export class ApiClient {
     const body = text ? safeJson(text) : undefined;
 
     if (!res.ok) {
-      let message: string = `HTTP ${res.status}`;
+      let message = `HTTP ${res.status}`;
       if (body && typeof body === 'object' && 'message' in body) {
         message = String((body as { message: unknown }).message);
       }

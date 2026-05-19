@@ -19,7 +19,7 @@ type Step = 'phone' | 'otp';
       </p>
 
       @if (step() === 'phone') {
-        <label class="block text-sm font-medium mb-2">Phone number</label>
+        <p class="block text-sm font-medium mb-2">Phone number</p>
         <input
           [(ngModel)]="phone"
           placeholder="+233241234567"

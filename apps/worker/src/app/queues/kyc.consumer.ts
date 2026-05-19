@@ -33,8 +33,7 @@ export class KycConsumer extends WorkerHost {
   async process(
     job: Job<KycVerifyJob>,
   ): Promise<{ status: string; similarity: number }> {
-    const { verificationId, frontKey, backKey, selfieKey, ghanaCardNumber } =
-      job.data;
+    const { verificationId, frontKey, selfieKey, ghanaCardNumber } = job.data;
     this.logger.log(`[${job.id}] processing verification ${verificationId}`);
 
     const bucket = this.s3.bucket('kyc');

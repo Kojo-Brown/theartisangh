@@ -6,6 +6,10 @@
   "sourceRoot": "apps/web/src",
   "tags": [],
   "targets": {
+    "typecheck": {
+      "executor": "nx:noop",
+      "_comment": "Angular's build target type-checks via ngc; the inferred tsc --build typecheck conflicts with the project-references flags we unset for Angular."
+    },
     "build": {
       "executor": "@angular/build:application",
       "outputs": ["{options.outputPath}"],

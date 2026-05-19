@@ -39,7 +39,7 @@ import type { VerificationStatus } from '@artisangh/web-api-client';
           </div>
         }
 
-        <label class="block text-sm font-medium mb-1">Ghana Card number</label>
+        <p class="block text-sm font-medium mb-1">Ghana Card number</p>
         <input
           [(ngModel)]="cardNumber"
           placeholder="GHA-123456789-0"

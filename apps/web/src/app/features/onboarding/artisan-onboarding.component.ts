@@ -33,7 +33,7 @@ const TRADES = [
         Customers will see this — make it shine.
       </p>
 
-      <label class="block text-sm font-medium mb-1">Trades you offer</label>
+      <p class="block text-sm font-medium mb-1">Trades you offer</p>
       <div class="flex flex-wrap gap-2 mb-4">
         @for (trade of trades; track trade) {
           <button
@@ -49,7 +49,7 @@ const TRADES = [
         }
       </div>
 
-      <label class="block text-sm font-medium mb-1">Years of experience</label>
+      <p class="block text-sm font-medium mb-1">Years of experience</p>
       <input
         type="number"
         min="0"
@@ -58,7 +58,7 @@ const TRADES = [
         class="w-full border border-slate-300 rounded px-3 py-2 mb-3"
       />
 
-      <label class="block text-sm font-medium mb-1">Hourly rate (GHS)</label>
+      <p class="block text-sm font-medium mb-1">Hourly rate (GHS)</p>
       <input
         type="number"
         min="0"
@@ -66,7 +66,7 @@ const TRADES = [
         class="w-full border border-slate-300 rounded px-3 py-2 mb-3"
       />
 
-      <label class="block text-sm font-medium mb-1">Service radius (km)</label>
+      <p class="block text-sm font-medium mb-1">Service radius (km)</p>
       <input
         type="number"
         min="1"
@@ -75,7 +75,7 @@ const TRADES = [
         class="w-full border border-slate-300 rounded px-3 py-2 mb-3"
       />
 
-      <label class="block text-sm font-medium mb-1">Base location</label>
+      <p class="block text-sm font-medium mb-1">Base location</p>
       <div class="flex gap-2 mb-1">
         <input
           type="number"
@@ -100,7 +100,7 @@ const TRADES = [
         📍 Use my current location
       </button>
 
-      <label class="block text-sm font-medium mb-1">Address (optional)</label>
+      <p class="block text-sm font-medium mb-1">Address (optional)</p>
       <input
         type="text"
         placeholder="e.g. Osu, Accra"
@@ -108,7 +108,7 @@ const TRADES = [
         class="w-full border border-slate-300 rounded px-3 py-2 mb-3"
       />
 
-      <label class="block text-sm font-medium mb-1">About you</label>
+      <p class="block text-sm font-medium mb-1">About you</p>
       <textarea
         rows="3"
         [(ngModel)]="bio"
@@ -116,9 +116,7 @@ const TRADES = [
         class="w-full border border-slate-300 rounded px-3 py-2 mb-4"
       ></textarea>
 
-      <label class="block text-sm font-medium mb-1"
-        >Voice intro (optional)</label
-      >
+      <p class="block text-sm font-medium mb-1">Voice intro (optional)</p>
       <p class="text-xs text-slate-500 mb-2">
         Record up to 60 seconds in your own voice. Customers can play it back;
         we'll add a written transcript automatically.
@@ -172,7 +170,8 @@ export class ArtisanOnboardingComponent {
 
   toggleTrade(trade: string): void {
     const next = new Set(this.selected());
-    next.has(trade) ? next.delete(trade) : next.add(trade);
+    if (next.has(trade)) next.delete(trade);
+    else next.add(trade);
     this.selected.set(next);
   }
 

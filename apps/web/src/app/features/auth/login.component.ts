@@ -20,9 +20,9 @@ type Step = 'phone' | 'otp';
       <p class="text-sm text-slate-500 mb-6">{{ 'app.tagline' | t }}</p>
 
       @if (step() === 'phone') {
-        <label class="block text-sm font-medium mb-2">{{
-          'auth.phonePrompt' | t
-        }}</label>
+        <p class="block text-sm font-medium mb-2">
+          {{ 'auth.phonePrompt' | t }}
+        </p>
         <input
           [(ngModel)]="phone"
           placeholder="+233241234567"

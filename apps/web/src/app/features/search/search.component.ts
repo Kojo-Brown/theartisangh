@@ -30,7 +30,7 @@ const TRADES = [
       <aside class="bg-white border border-slate-200 rounded-lg p-4 h-fit">
         <h2 class="font-medium mb-3">Filters</h2>
 
-        <label class="block text-sm mb-1">Trade</label>
+        <p class="block text-sm mb-1">Trade</p>
         <select
           [(ngModel)]="trade"
           class="w-full border border-slate-300 rounded px-2 py-1 mb-3"
@@ -40,7 +40,7 @@ const TRADES = [
           }
         </select>
 
-        <label class="block text-sm mb-1">Radius (km)</label>
+        <p class="block text-sm mb-1">Radius (km)</p>
         <input
           type="number"
           min="1"
@@ -49,7 +49,7 @@ const TRADES = [
           class="w-full border border-slate-300 rounded px-2 py-1 mb-3"
         />
 
-        <label class="block text-sm mb-1">Location</label>
+        <p class="block text-sm mb-1">Location</p>
         <div class="flex gap-2 mb-2">
           <input
             type="number"

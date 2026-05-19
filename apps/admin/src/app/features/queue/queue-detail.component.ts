@@ -52,9 +52,7 @@ import type { AdminVerificationDetail } from '@artisangh/web-api-client';
             </div>
           </div>
 
-          <label class="block text-sm font-medium mb-1"
-            >Reason (for reject)</label
-          >
+          <p class="block text-sm font-medium mb-1">Reason (for reject)</p>
           <textarea
             rows="3"
             [(ngModel)]="reason"

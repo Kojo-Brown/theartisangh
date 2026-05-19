@@ -20,7 +20,7 @@ async function bootstrap() {
     origin: config
       .get('CORS_ORIGINS')
       .split(',')
-      .map((s) => s.trim()),
+      .map((s: string) => s.trim()),
     credentials: true,
   });
   app.setGlobalPrefix('api');

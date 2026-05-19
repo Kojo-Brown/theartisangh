@@ -1,10 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService, S3Service } from '@artisangh/api-core';
-import { Prisma } from '@prisma/client';
 import type {
   UpsertArtisanProfileDto,
   SearchArtisansDto,
 } from './artisans.dto';
+import { TRADES } from './artisans.dto';
 
 @Injectable()
 export class ArtisansService {
@@ -20,7 +20,7 @@ export class ArtisansService {
       data: { role: 'ARTISAN' },
     });
 
-    // Upsert the structured fields, then set geography via raw SQL.
+    // Prisma's @db.Decimal accepts string-or-number; pass the number directly.
     const profile = await this.prisma.artisanProfile.upsert({
       where: { userId },
       create: {
@@ -28,7 +28,7 @@ export class ArtisansService {
         trades: dto.trades,
         bio: dto.bio,
         yearsExperience: dto.yearsExperience,
-        hourlyRate: dto.hourlyRate ? new Prisma.Decimal(dto.hourlyRate) : null,
+        hourlyRate: dto.hourlyRate ?? null,
         currency: dto.currency,
         serviceRadiusKm: dto.serviceRadiusKm,
         baseAddress: dto.baseAddress,
@@ -37,7 +37,7 @@ export class ArtisansService {
         trades: dto.trades,
         bio: dto.bio,
         yearsExperience: dto.yearsExperience,
-        hourlyRate: dto.hourlyRate ? new Prisma.Decimal(dto.hourlyRate) : null,
+        hourlyRate: dto.hourlyRate ?? null,
         currency: dto.currency,
         serviceRadiusKm: dto.serviceRadiusKm,
         baseAddress: dto.baseAddress,
@@ -67,31 +67,33 @@ export class ArtisansService {
   }
 
   /**
-   * PostGIS ST_DWithin search — returns artisans whose base location falls within
-   * `radiusKm` of (lat, lng) AND whose own serviceRadiusKm reaches the query point.
+   * PostGIS ST_DWithin search — returns artisans within `radiusKm` of (lat, lng).
+   * `trade` and `verifiedOnly` are guaranteed safe by Zod validation; we still
+   * cross-check the trade against the allowlist before inlining.
    */
   async search(dto: SearchArtisansDto) {
-    const tradeFilter = dto.trade
-      ? Prisma.sql`AND ${dto.trade} = ANY(p."trades")`
-      : Prisma.sql``;
-    const verifiedFilter = dto.verifiedOnly
-      ? Prisma.sql`AND v."status" = 'APPROVED'`
-      : Prisma.sql``;
+    if (dto.trade && !TRADES.includes(dto.trade)) {
+      throw new Error('Unknown trade');
+    }
+    const tradeClause = dto.trade ? `AND '${dto.trade}' = ANY(p."trades")` : '';
+    const verifiedClause = dto.verifiedOnly
+      ? `AND v."status" = 'APPROVED'`
+      : '';
 
-    return this.prisma.$queryRaw<
-      Array<{
-        id: string;
-        userId: string;
-        fullName: string;
-        avatarUrl: string | null;
-        trades: string[];
-        ratingAvg: number;
-        jobsCompleted: number;
-        hourlyRate: string | null;
-        distanceM: number;
-        verified: boolean;
-      }>
-    >`
+    type Row = {
+      id: string;
+      userId: string;
+      fullName: string;
+      avatarUrl: string | null;
+      trades: string[];
+      ratingAvg: number;
+      jobsCompleted: number;
+      hourlyRate: string | null;
+      distanceM: number;
+      verified: boolean;
+    };
+    const rows = (await this.prisma.$queryRawUnsafe(
+      `
       SELECT
         p."id",
         p."userId",
@@ -103,7 +105,7 @@ export class ArtisansService {
         p."hourlyRate"::text AS "hourlyRate",
         ST_Distance(
           p."baseLocation",
-          ST_SetSRID(ST_MakePoint(${dto.lng}, ${dto.lat}), 4326)::geography
+          ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography
         ) AS "distanceM",
         (v."status" = 'APPROVED') AS "verified"
       FROM "ArtisanProfile" p
@@ -112,14 +114,20 @@ export class ArtisansService {
       WHERE p."baseLocation" IS NOT NULL
         AND ST_DWithin(
           p."baseLocation",
-          ST_SetSRID(ST_MakePoint(${dto.lng}, ${dto.lat}), 4326)::geography,
-          ${dto.radiusKm * 1000}
+          ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,
+          $3
         )
-        ${tradeFilter}
-        ${verifiedFilter}
+        ${tradeClause}
+        ${verifiedClause}
       ORDER BY "distanceM" ASC
-      LIMIT ${dto.limit}
-    `;
+      LIMIT $4
+    `,
+      dto.lng,
+      dto.lat,
+      dto.radiusKm * 1000,
+      dto.limit,
+    )) as Row[];
+    return rows;
   }
 
   async findById(id: string) {

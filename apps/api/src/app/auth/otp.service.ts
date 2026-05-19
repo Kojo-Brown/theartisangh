@@ -2,7 +2,8 @@ import {
   Injectable,
   Inject,
   BadRequestException,
-  TooManyRequestsException,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomInt, createHash } from 'node:crypto';
@@ -27,8 +28,9 @@ export class OtpService {
       await this.redis.expire(rateKey, 60);
     }
     if (inWindow > 3) {
-      throw new TooManyRequestsException(
+      throw new HttpException(
         'Too many OTP requests, try again in a minute',
+        HttpStatus.TOO_MANY_REQUESTS,
       );
     }
 
@@ -60,8 +62,9 @@ export class OtpService {
     const max = this.config.get('OTP_MAX_ATTEMPTS');
     if (record.attempts >= max) {
       await this.redis.del(key);
-      throw new TooManyRequestsException(
+      throw new HttpException(
         'Too many attempts, request a new code',
+        HttpStatus.TOO_MANY_REQUESTS,
       );
     }
 
